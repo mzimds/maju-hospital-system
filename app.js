@@ -1,6 +1,10 @@
 class PlantaoManager {
     constructor() {
-        this.registros = JSON.parse(localStorage.getItem('registros')) || [];
+        this.plantaoAtivo = {
+            registros: JSON.parse(localStorage.getItem('registros')) || [],
+            historico: JSON.parse(localStorage.getItem('historicoPlantao')) || []
+        };
+        this.registroSelecionado = null;
         this.initElements();
         this.initEventos();
         this.atualizarInterface();
@@ -11,7 +15,6 @@ class PlantaoManager {
         this.elements = {
             btnNovo: document.getElementById('btn-novo'),
             btnEncerrar: document.getElementById('btn-encerrar'),
-            btnCancelar: document.querySelector('.btn-cancelar'),
             modal: document.getElementById('modal'),
             form: document.getElementById('form'),
             registrosContainer: document.getElementById('registros'),
@@ -20,82 +23,147 @@ class PlantaoManager {
     }
 
     initEventos() {
-        // Evento para abrir modal
         this.elements.btnNovo.addEventListener('click', () => this.abrirModal());
-        
-        // Evento para encerrar plantão
         this.elements.btnEncerrar.addEventListener('click', () => this.encerrarPlantao());
-        
-        // Evento para cancelar registro
-        this.elements.btnCancelar.addEventListener('click', () => this.fecharModal());
-        
-        // Evento para salvar registro
         this.elements.form.addEventListener('submit', (e) => this.salvarRegistro(e));
+        
+        this.elements.modal.addEventListener('click', (e) => {
+            if(e.target.classList.contains('btn-cancelar') || e.target.classList.contains('modal')) {
+                this.fecharModal();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if(e.target.classList.contains('btn-acrescentar')) {
+                const registroId = parseInt(e.target.dataset.id);
+                this.registroSelecionado = this.plantaoAtivo.registros.find(r => r.id === registroId);
+                this.abrirModalAcrescentar();
+            }
+        });
     }
 
     abrirModal() {
         this.elements.modal.style.display = 'flex';
     }
 
-    fecharModal() {
-        this.elements.modal.style.display = 'none';
-        this.elements.form.reset();
+    abrirModalAcrescentar() {
+        const modalHTML = `
+            <div class="modal" id="modal-acrescentar">
+                <div class="modal-content">
+                    <h2>➕ Nova Informação</h2>
+                    <form id="form-acrescentar">
+                        <div class="form-group">
+                            <textarea 
+                                id="input-acrescentar" 
+                                placeholder="Descreva a nova ocorrência..." 
+                                rows="4"
+                                required
+                            ></textarea>
+                        </div>
+                        <div class="modal-botoes">
+                            <button type="button" class="btn-cancelar">Cancelar</button>
+                            <button type="submit" class="btn-salvar">Salvar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        this.configurarEventoAcrescentar();
+    }
+
+    configurarEventoAcrescentar() {
+        document.getElementById('form-acrescentar').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const texto = document.getElementById('input-acrescentar').value.trim();
+            
+            if(texto) {
+                this.registroSelecionado.historico.push({
+                    texto,
+                    data: new Date().toLocaleString('pt-BR'),
+                    autor: "Enf. Responsável"
+                });
+                
+                this.salvarLocalStorage();
+                this.atualizarInterface();
+                this.fecharModal('acrescentar');
+            }
+        });
     }
 
     salvarRegistro(e) {
         e.preventDefault();
-        const paciente = document.getElementById('paciente').value.trim();
-        const ocorrencia = document.getElementById('ocorrencia').value.trim();
-
-        if(paciente && ocorrencia) {
-            this.registros.unshift({
-                id: Date.now(),
-                paciente,
-                ocorrencia,
+        const novoRegistro = {
+            id: Date.now(),
+            paciente: document.getElementById('paciente').value.trim(),
+            historico: [{
+                texto: document.getElementById('ocorrencia').value.trim(),
                 data: new Date().toLocaleString('pt-BR'),
                 autor: "Enf. Responsável"
-            });
-            
-            this.salvarLocalStorage();
-            this.atualizarInterface();
-            this.fecharModal();
-        }
-    }
+            }]
+        };
 
-    encerrarPlantao() {
-        if(confirm('Tem certeza que deseja encerrar o plantão?')) {
-            localStorage.removeItem('registros');
-            this.registros = [];
-            this.atualizarInterface();
-        }
+        this.plantaoAtivo.registros.unshift(novoRegistro);
+        this.salvarLocalStorage();
+        this.fecharModal();
+        this.atualizarInterface();
     }
 
     atualizarInterface() {
-        this.elements.registrosContainer.innerHTML = this.registros
+        this.elements.registrosContainer.innerHTML = this.plantaoAtivo.registros
             .map(registro => `
                 <div class="registro-card">
-                    <h3>${registro.paciente}</h3>
-                    <p>${registro.ocorrencia}</p>
-                    <small>${registro.data} - ${registro.autor}</small>
+                    <div class="cabecalho-registro">
+                        <h3>${registro.paciente}</h3>
+                        <button 
+                            class="btn-acrescentar" 
+                            data-id="${registro.id}"
+                            title="Acrescentar informação"
+                        >+</button>
+                    </div>
+                    <div class="historico-registro">
+                        ${registro.historico.map(entry => `
+                            <div class="entrada-registro">
+                                <p>${entry.texto}</p>
+                                <small>${entry.autor} - ${entry.data}</small>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             `).join('');
     }
 
-    atualizarHorario() {
-        const options = { 
-            day: '2-digit', 
-            month: '2-digit', 
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        };
-        this.elements.horarioInicio.textContent = new Date().toLocaleString('pt-BR', options);
+    salvarLocalStorage() {
+        localStorage.setItem('registros', JSON.stringify(this.plantaoAtivo.registros));
+        localStorage.setItem('historicoPlantao', JSON.stringify(this.plantaoAtivo.historico));
     }
 
-    salvarLocalStorage() {
-        localStorage.setItem('registros', JSON.stringify(this.registros));
+    fecharModal(tipo = 'principal') {
+        const modal = document.getElementById(`modal-${tipo}`);
+        if(modal) modal.remove();
+        this.elements.form.reset();
+        if(tipo === 'principal') {
+            this.elements.modal.style.display = 'none';
+        }
+    }
+
+    encerrarPlantao() {
+        if(confirm('Deseja realmente encerrar o plantão?')) {
+            this.plantaoAtivo.historico.push({
+                data: new Date().toLocaleString('pt-BR'),
+                registros: this.plantaoAtivo.registros
+            });
+            this.plantaoAtivo.registros = [];
+            this.salvarLocalStorage();
+            this.atualizarInterface();
+        }
+    }
+
+    atualizarHorario() {
+        setInterval(() => {
+            this.elements.horarioInicio.textContent = new Date().toLocaleString('pt-BR');
+        }, 1000);
     }
 }
 
-// Inicialização do sistema
-document.addEventListener('DOMContentLoaded', () => new PlantaoManager());
+const plantao = new PlantaoManager();
