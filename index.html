@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maju - Sistema Hospitalar</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Cabeçalho -->
+        <header class="header">
+            <div class="setor-info">
+                <h1>UTI-01</h1>
+                <div class="status">
+                    <span>🟢 Plantão Ativo</span>
+                    <small id="horario-inicio"></small>
+                </div>
+            </div>
+            <button class="btn-danger" id="btn-encerrar">Encerrar Plantão</button>
+        </header>
+
+        <!-- Área de Registros -->
+        <main class="registros" id="registros"></main>
+
+        <!-- Botão Flutuante -->
+        <button class="btn-flutuante" id="btn-novo">+</button>
+
+        <!-- Modal -->
+        <div class="modal" id="modal">
+            <div class="modal-content">
+                <h2>📝 Novo Registro</h2>
+                <form id="form">
+                    <div class="form-group">
+                        <label for="paciente">Identificação:</label>
+                        <input 
+                            type="text" 
+                            id="paciente" 
+                            placeholder="Ex: Paciente João Silva | Quarto 205"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ocorrencia">Registro Completo:</label>
+                        <textarea 
+                            id="ocorrencia" 
+                            placeholder="Descreva detalhadamente a ocorrência..."
+                            rows="5"
+                            required
+                        ></textarea>
+                    </div>
+
+                    <div class="modal-botoes">
+                        <button type="button" class="btn-cancelar">Cancelar</button>
+                        <button type="submit" class="btn-salvar">Salvar Registro</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
