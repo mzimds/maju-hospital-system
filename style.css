@@ -52,7 +52,7 @@ header {
     text-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
     transition: all 0.3s;
     position: relative;
-    top: 12px; /* Ajuste o valor conforme necessário */
+    top: 13px; /* Ajuste o valor conforme necessário */
 }
 
 #btn-encerrar:hover {
