@@ -1,6 +1,7 @@
 class PlantaoManager {
     constructor() {
         this.plantaoAtivo = {
+            ativo: JSON.parse(localStorage.getItem('plantaoAtivo')) ?? true,
             registros: JSON.parse(localStorage.getItem('registros')) || [],
             historico: JSON.parse(localStorage.getItem('historicoPlantao')) || []
         };
@@ -9,6 +10,7 @@ class PlantaoManager {
         this.initEventos();
         this.atualizarInterface();
         this.atualizarHorario();
+        this.atualizarStatusPlantao();
     }
 
     initElements() {
@@ -18,13 +20,19 @@ class PlantaoManager {
             modal: document.getElementById('modal'),
             form: document.getElementById('form'),
             registrosContainer: document.getElementById('registros'),
-            horarioInicio: document.getElementById('horario-inicio')
+            horarioInicio: document.getElementById('horario-inicio'),
+            statusElement: document.querySelector('.status'),
+            statusTexto: document.getElementById('status-texto')
         };
     }
 
     initEventos() {
         this.elements.btnNovo.addEventListener('click', () => this.abrirModal());
-        this.elements.btnEncerrar.addEventListener('click', () => this.encerrarPlantao());
+        
+        this.elements.btnEncerrar.addEventListener('click', () => {
+            this.plantaoAtivo.ativo ? this.encerrarPlantao() : this.iniciarPlantao();
+        });
+
         this.elements.form.addEventListener('submit', (e) => this.salvarRegistro(e));
         
         this.elements.modal.addEventListener('click', (e) => {
@@ -33,13 +41,59 @@ class PlantaoManager {
             }
         });
 
+        // Evento corrigido para o botão "+"
         document.addEventListener('click', (e) => {
-            if(e.target.classList.contains('btn-acrescentar')) {
+            if (e.target.classList.contains('btn-acrescentar')) {
+                e.stopPropagation();
                 const registroId = parseInt(e.target.dataset.id);
                 this.registroSelecionado = this.plantaoAtivo.registros.find(r => r.id === registroId);
-                this.abrirModalAcrescentar();
+                if (this.registroSelecionado) {
+                    this.abrirModalAcrescentar();
+                }
             }
         });
+    }
+
+    atualizarStatusPlantao() {
+        if(this.plantaoAtivo.ativo) {
+            this.elements.statusElement.classList.remove('inativo');
+            this.elements.statusElement.classList.add('ativo');
+            this.elements.statusTexto.textContent = 'Plantão Ativo';
+            this.elements.btnEncerrar.textContent = 'Encerrar';
+            this.elements.btnEncerrar.style.color = '#e74c3c';
+        } else {
+            this.elements.statusElement.classList.remove('ativo');
+            this.elements.statusElement.classList.add('inativo');
+            this.elements.statusTexto.textContent = 'Plantão Inativo';
+            this.elements.btnEncerrar.textContent = 'Iniciar';
+            this.elements.btnEncerrar.style.color = '#2ecc71';
+        }
+    }
+
+    encerrarPlantao() {
+        if(confirm('Deseja realmente encerrar o plantão?')) {
+            this.plantaoAtivo.ativo = false;
+            this.plantaoAtivo.historico.push({
+                data: new Date().toLocaleString('pt-BR'),
+                registros: this.plantaoAtivo.registros
+            });
+            this.plantaoAtivo.registros = [];
+            this.salvarLocalStorage();
+            this.atualizarInterface();
+            this.atualizarStatusPlantao();
+        }
+    }
+
+    iniciarPlantao() {
+        this.plantaoAtivo.ativo = true;
+        this.salvarLocalStorage();
+        this.atualizarStatusPlantao();
+    }
+
+    salvarLocalStorage() {
+        localStorage.setItem('plantaoAtivo', JSON.stringify(this.plantaoAtivo.ativo));
+        localStorage.setItem('registros', JSON.stringify(this.plantaoAtivo.registros));
+        localStorage.setItem('historicoPlantao', JSON.stringify(this.plantaoAtivo.historico));
     }
 
     abrirModal() {
@@ -133,29 +187,12 @@ class PlantaoManager {
             `).join('');
     }
 
-    salvarLocalStorage() {
-        localStorage.setItem('registros', JSON.stringify(this.plantaoAtivo.registros));
-        localStorage.setItem('historicoPlantao', JSON.stringify(this.plantaoAtivo.historico));
-    }
-
     fecharModal(tipo = 'principal') {
         const modal = document.getElementById(`modal-${tipo}`);
         if(modal) modal.remove();
         this.elements.form.reset();
         if(tipo === 'principal') {
             this.elements.modal.style.display = 'none';
-        }
-    }
-
-    encerrarPlantao() {
-        if(confirm('Deseja realmente encerrar o plantão?')) {
-            this.plantaoAtivo.historico.push({
-                data: new Date().toLocaleString('pt-BR'),
-                registros: this.plantaoAtivo.registros
-            });
-            this.plantaoAtivo.registros = [];
-            this.salvarLocalStorage();
-            this.atualizarInterface();
         }
     }
 
