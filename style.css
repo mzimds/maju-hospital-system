@@ -78,7 +78,7 @@ header {
     order: 1;
     margin-left: 0.1rem;
     position: relative;
-    top: 2px; /* Ajuste este valor para subir/descer o ícone */
+    top: -1px; /* Ajuste este valor para subir/descer o ícone */
 }
 
 @keyframes pulse {
