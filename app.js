@@ -33,7 +33,9 @@ class PlantaoManager {
             abas: document.querySelectorAll('.aba'),
             conteudoAbas: document.querySelectorAll('.conteudo-aba'),
             inputBusca: document.getElementById('input-busca'),
-            sugestoesBusca: document.getElementById('sugestoes-busca')
+            inputBuscaHistorico: document.getElementById('input-busca-historico'),
+            sugestoesBusca: document.getElementById('sugestoes-busca'),
+            barraPesquisaPlantao: document.getElementById('barra-pesquisa-plantao')
         };
     }
 
@@ -41,9 +43,13 @@ class PlantaoManager {
         // Botão Novo Registro
         this.elements.btnNovo.addEventListener('click', () => this.abrirModal());
         
-        // Botão Encerrar Plantão
+        // Botão Encerrar/Iniciar Plantão
         this.elements.btnEncerrar.addEventListener('click', () => {
-            this.abrirModalEncerrar();
+            if (this.plantaoAtivo.ativo) {
+                this.abrirModalEncerrar();
+            } else {
+                this.iniciarPlantao();
+            }
         });
 
         // Troca de abas
@@ -101,13 +107,19 @@ class PlantaoManager {
             }
         });
         
-        // Barra de pesquisa
+        // Barra de pesquisa plantão ativo
         this.elements.inputBusca.addEventListener('input', () => {
             this.atualizarSugestoes();
+            this.filtrarRegistros();
         });
         
         this.elements.inputBusca.addEventListener('focus', () => {
             this.atualizarSugestoes();
+        });
+        
+        // Barra de pesquisa histórico
+        this.elements.inputBuscaHistorico.addEventListener('input', () => {
+            this.filtrarHistorico();
         });
         
         document.addEventListener('click', (e) => {
@@ -124,12 +136,20 @@ class PlantaoManager {
             this.elements.statusTexto.textContent = 'Plantão Ativo';
             this.elements.btnEncerrar.textContent = 'Encerrar';
             this.elements.btnEncerrar.style.color = '#e74c3c';
+            
+            // Mostrar barra de pesquisa e botão flutuante
+            this.elements.barraPesquisaPlantao.style.display = 'block';
+            document.getElementById('btn-novo').style.display = 'flex';
         } else {
             this.elements.statusElement.classList.remove('ativo');
             this.elements.statusElement.classList.add('inativo');
             this.elements.statusTexto.textContent = 'Plantão Inativo';
             this.elements.btnEncerrar.textContent = 'Iniciar';
             this.elements.btnEncerrar.style.color = '#2ecc71';
+            
+            // Ocultar barra de pesquisa e botão flutuante
+            this.elements.barraPesquisaPlantao.style.display = 'none';
+            document.getElementById('btn-novo').style.display = 'none';
         }
     }
 
@@ -312,6 +332,15 @@ class PlantaoManager {
             } else {
                 card.style.display = 'none';
             }
+        });
+    }
+
+    filtrarHistorico() {
+        const termo = this.elements.inputBuscaHistorico.value.toLowerCase().trim();
+        
+        document.querySelectorAll('.plantao-card').forEach(card => {
+            const conteudo = card.textContent.toLowerCase();
+            card.style.display = conteudo.includes(termo) ? 'block' : 'none';
         });
     }
 
