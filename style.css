@@ -245,3 +245,37 @@ header {
 
 .btn-salvar-acrescentar { color: #2ecc71; }
 .btn-cancelar-acrescentar { color: #e74c3c !important; }
+
+/* ===== MELHORIAS DE ESPAÇAMENTO E EXPANSÃO ===== */
+.entrada-registro {
+    padding: 0.8rem 0;
+    margin-bottom: 0.8rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.entrada-registro:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.historico-registro {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.historico-registro.expandido {
+    max-height: none;
+}
+
+.btn-expandir {
+    display: block;
+    margin-top: 0.8rem;
+    background: none;
+    border: none;
+    color: var(--secondary);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.3rem 0;
+}
