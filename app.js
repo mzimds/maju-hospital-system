@@ -22,7 +22,10 @@ class PlantaoManager {
             registrosContainer: document.getElementById('registros'),
             horarioInicio: document.getElementById('horario-inicio'),
             statusElement: document.querySelector('.status'),
-            statusTexto: document.getElementById('status-texto')
+            statusTexto: document.getElementById('status-texto'),
+            modalAcrescentar: document.getElementById('modal-acrescentar'),
+            formAcrescentar: document.getElementById('form-acrescentar'),
+            inputAcrescentar: document.getElementById('input-acrescentar')
         };
     }
 
@@ -40,19 +43,32 @@ class PlantaoManager {
         
         // Fechar Modal Principal
         this.elements.modal.addEventListener('click', (e) => {
-            if(e.target.classList.contains('btn-cancelar') || e.target.classList.contains('modal')) {
+            if(e.target.classList.contains('btn-cancelar') || e.target === this.elements.modal) {
                 this.fecharModal();
             }
         });
 
-        // CORREÇÃO CRÍTICA: Delegando evento para o container de registros
+        // Evento para o botão "Acrescentar informação"
         this.elements.registrosContainer.addEventListener('click', (e) => {
             if (e.target.classList.contains('btn-acrescentar')) {
                 const registroId = parseInt(e.target.dataset.id);
                 this.registroSelecionado = this.plantaoAtivo.registros.find(r => r.id === registroId);
-                if (this.registroSelecionado) {
-                    this.abrirModalAcrescentar();
-                }
+                this.abrirModalAcrescentar();
+            }
+        });
+
+        // Eventos para o modal de acréscimo
+        document.addEventListener('click', (e) => {
+            // Fechar modal de acréscimo
+            if (e.target.classList.contains('btn-cancelar-acrescentar') || 
+                e.target.classList.contains('modal-acrescentar')) {
+                this.fecharModalAcrescentar();
+            }
+            
+            // Salvar acréscimo
+            if (e.target.classList.contains('btn-salvar-acrescentar')) {
+                e.preventDefault();
+                this.salvarAcrescimo();
             }
         });
     }
@@ -100,73 +116,27 @@ class PlantaoManager {
     }
 
     abrirModal() {
-        if (!this.plantaoAtivo.ativo) {
-            this.iniciarPlantao();
-        }
         this.elements.modal.style.display = 'flex';
     }
 
     abrirModalAcrescentar() {
-        // Criar o modal
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.id = 'modal-acrescentar';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h2>➕ Nova Informação</h2>
-                <form id="form-acrescentar">
-                    <div class="form-group">
-                        <textarea 
-                            id="input-acrescentar" 
-                            placeholder="Descreva a nova ocorrência..." 
-                            rows="4"
-                            required
-                        ></textarea>
-                    </div>
-                    <div class="modal-botoes">
-                        <button type="button" class="btn-cancelar">Cancelar</button>
-                        <button type="submit" class="btn-salvar">Salvar</button>
-                    </div>
-                </form>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Configurar eventos para o novo modal
-        const form = modal.querySelector('#form-acrescentar');
-        const btnCancelar = modal.querySelector('.btn-cancelar');
-        
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const texto = modal.querySelector('#input-acrescentar').value.trim();
-            
-            if (texto) {
-                this.registroSelecionado.historico.push({
-                    texto,
-                    data: new Date().toLocaleString('pt-BR'),
-                    autor: "Enf. Responsável"
-                });
-                
-                this.salvarLocalStorage();
-                this.atualizarInterface();
-                modal.remove();
-            }
-        });
-        
-        btnCancelar.addEventListener('click', () => {
-            modal.remove();
-        });
-        
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.remove();
-            }
-        });
+        this.elements.modalAcrescentar.style.display = 'flex';
+        this.elements.inputAcrescentar.focus();
+    }
+
+    fecharModalAcrescentar() {
+        this.elements.modalAcrescentar.style.display = 'none';
+        this.elements.inputAcrescentar.value = '';
     }
 
     salvarRegistro(e) {
         e.preventDefault();
+        
+        // Inicia plantão apenas ao salvar registro
+        if (!this.plantaoAtivo.ativo) {
+            this.iniciarPlantao();
+        }
+        
         const novoRegistro = {
             id: Date.now(),
             paciente: document.getElementById('paciente').value.trim(),
@@ -181,6 +151,22 @@ class PlantaoManager {
         this.salvarLocalStorage();
         this.fecharModal();
         this.atualizarInterface();
+    }
+
+    salvarAcrescimo() {
+        const texto = document.getElementById('input-acrescentar').value.trim();
+        
+        if (texto && this.registroSelecionado) {
+            this.registroSelecionado.historico.push({
+                texto,
+                data: new Date().toLocaleString('pt-BR'),
+                autor: "Enf. Responsável"
+            });
+            
+            this.salvarLocalStorage();
+            this.atualizarInterface();
+            this.fecharModalAcrescentar();
+        }
     }
 
     atualizarInterface() {
@@ -221,7 +207,7 @@ class PlantaoManager {
     }
 }
 
-// CORREÇÃO FINAL: Instância única após o DOM estar pronto
+// Inicialização após o DOM estar pronto
 document.addEventListener('DOMContentLoaded', () => {
     const plantao = new PlantaoManager();
 });
