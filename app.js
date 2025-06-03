@@ -24,7 +24,6 @@ class PlantaoManager {
             statusElement: document.querySelector('.status'),
             statusTexto: document.getElementById('status-texto'),
             modalAcrescentar: document.getElementById('modal-acrescentar'),
-            formAcrescentar: document.getElementById('form-acrescentar'),
             inputAcrescentar: document.getElementById('input-acrescentar')
         };
     }
@@ -144,7 +143,8 @@ class PlantaoManager {
                 texto: document.getElementById('ocorrencia').value.trim(),
                 data: new Date().toLocaleString('pt-BR'),
                 autor: "Enf. Responsável"
-            }]
+            }],
+            mostrarTodas: false
         };
 
         this.plantaoAtivo.registros.unshift(novoRegistro);
@@ -171,38 +171,53 @@ class PlantaoManager {
 
     atualizarInterface() {
         this.elements.registrosContainer.innerHTML = this.plantaoAtivo.registros.length > 0 
-            ? this.plantaoAtivo.registros.map(registro => `
-                <div class="registro-card">
-                    <div class="cabecalho-registro">
-                        <h3>${registro.paciente}</h3>
-                        <button 
-                            class="btn-acrescentar" 
-                            data-id="${registro.id}"
-                            title="Acrescentar informação"
-                        >+</button>
+            ? this.plantaoAtivo.registros.map(registro => {
+                // Mostrar apenas as 3 últimas entradas por padrão
+                const entradasVisiveis = registro.mostrarTodas 
+                    ? registro.historico 
+                    : registro.historico.slice(0, 3);
+                
+                const entradasOcultas = registro.historico.length - entradasVisiveis.length;
+                
+                return `
+                    <div class="registro-card">
+                        <div class="cabecalho-registro">
+                            <h3>${registro.paciente}</h3>
+                            <button 
+                                class="btn-acrescentar" 
+                                data-id="${registro.id}"
+                                title="Acrescentar informação"
+                            >+</button>
+                        </div>
+                        <div class="historico-registro ${registro.mostrarTodas ? 'expandido' : ''}">
+                            ${entradasVisiveis.map(entry => `
+                                <div class="entrada-registro">
+                                    <p>${entry.texto}</p>
+                                    <small>${entry.autor} - ${entry.data}</small>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${registro.historico.length > 3 ? `
+                            <button class="btn-expandir" data-id="${registro.id}">
+                                ${registro.mostrarTodas ? 'Recolher' : `Expandir (+${entradasOcultas})`}
+                            </button>
+                        ` : ''}
                     </div>
-                    <div class="historico-registro">
-                        ${registro.historico.map(entry => `
-                            <div class="entrada-registro">
-                                <p>${entry.texto}</p>
-                                <small>${entry.autor} - ${entry.data}</small>
-                            </div>
-                        `).join('')}
-                    </div>
-                    ${registro.historico.length > 3 ? `
-                        <button class="btn-expandir" data-id="${registro.id}">Expandir</button>
-                    ` : ''}
-                </div>
-            `).join('')
+                `;
+            }).join('')
             : '<div class="sem-registros">Nenhum registro encontrado</div>';
         
         // Adiciona eventos aos botões de expandir
         document.querySelectorAll('.btn-expandir').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const card = e.target.closest('.registro-card');
-                const content = card.querySelector('.historico-registro');
-                content.classList.toggle('expandido');
-                e.target.textContent = content.classList.contains('expandido') ? 'Recolher' : 'Expandir';
+                const registroId = parseInt(e.target.dataset.id);
+                const registro = this.plantaoAtivo.registros.find(r => r.id === registroId);
+                
+                if (registro) {
+                    registro.mostrarTodas = !registro.mostrarTodas;
+                    this.salvarLocalStorage();
+                    this.atualizarInterface();
+                }
             });
         });
     }
