@@ -25,8 +25,8 @@
         </div>
 
         <div class="conteudo-aba ativa" id="aba-plantao">
-            <!-- Barra de pesquisa -->
-            <div class="barra-pesquisa">
+            <!-- Barra de pesquisa (visível apenas com plantão ativo) -->
+            <div class="barra-pesquisa" id="barra-pesquisa-plantao">
                 <div class="pesquisa-container">
                     <input type="text" id="input-busca" placeholder="Buscar paciente...">
                     <span class="icone-busca">🔍</span>
@@ -43,6 +43,13 @@
         </div>
 
         <div class="conteudo-aba" id="aba-historico">
+            <!-- Barra de pesquisa para histórico -->
+            <div class="barra-pesquisa">
+                <div class="pesquisa-container">
+                    <input type="text" id="input-busca-historico" placeholder="Buscar em histórico...">
+                    <span class="icone-busca">🔍</span>
+                </div>
+            </div>
             <div class="historico-plantao" id="historico-plantao"></div>
         </div>
 
@@ -106,7 +113,7 @@
                     <div class="form-group">
                         <textarea 
                             id="relatorio-encerramento" 
-                            placeholder="Relatório final do plantão (opcional)..."
+                            placeholder="Relatório final do plantão (opcional). Sugestão: Registre comentários importantes ou pontos de atenção para o próximo plantão..."
                             rows="5"
                         ></textarea>
                     </div>
