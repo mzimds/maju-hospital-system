@@ -27,24 +27,27 @@ class PlantaoManager {
     }
 
     initEventos() {
+        // Botão Novo Registro
         this.elements.btnNovo.addEventListener('click', () => this.abrirModal());
         
+        // Botão Encerrar/Iniciar Plantão
         this.elements.btnEncerrar.addEventListener('click', () => {
             this.plantaoAtivo.ativo ? this.encerrarPlantao() : this.iniciarPlantao();
         });
 
+        // Formulário de Novo Registro
         this.elements.form.addEventListener('submit', (e) => this.salvarRegistro(e));
         
+        // Fechar Modal Principal
         this.elements.modal.addEventListener('click', (e) => {
             if(e.target.classList.contains('btn-cancelar') || e.target.classList.contains('modal')) {
                 this.fecharModal();
             }
         });
 
-        // Evento corrigido para o botão "+"
-        document.addEventListener('click', (e) => {
+        // CORREÇÃO CRÍTICA: Delegando evento para o container de registros
+        this.elements.registrosContainer.addEventListener('click', (e) => {
             if (e.target.classList.contains('btn-acrescentar')) {
-                e.stopPropagation();
                 const registroId = parseInt(e.target.dataset.id);
                 this.registroSelecionado = this.plantaoAtivo.registros.find(r => r.id === registroId);
                 if (this.registroSelecionado) {
@@ -97,41 +100,48 @@ class PlantaoManager {
     }
 
     abrirModal() {
+        if (!this.plantaoAtivo.ativo) {
+            this.iniciarPlantao();
+        }
         this.elements.modal.style.display = 'flex';
     }
 
     abrirModalAcrescentar() {
-        const modalHTML = `
-            <div class="modal" id="modal-acrescentar">
-                <div class="modal-content">
-                    <h2>➕ Nova Informação</h2>
-                    <form id="form-acrescentar">
-                        <div class="form-group">
-                            <textarea 
-                                id="input-acrescentar" 
-                                placeholder="Descreva a nova ocorrência..." 
-                                rows="4"
-                                required
-                            ></textarea>
-                        </div>
-                        <div class="modal-botoes">
-                            <button type="button" class="btn-cancelar">Cancelar</button>
-                            <button type="submit" class="btn-salvar">Salvar</button>
-                        </div>
-                    </form>
-                </div>
+        // Criar o modal
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'modal-acrescentar';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h2>➕ Nova Informação</h2>
+                <form id="form-acrescentar">
+                    <div class="form-group">
+                        <textarea 
+                            id="input-acrescentar" 
+                            placeholder="Descreva a nova ocorrência..." 
+                            rows="4"
+                            required
+                        ></textarea>
+                    </div>
+                    <div class="modal-botoes">
+                        <button type="button" class="btn-cancelar">Cancelar</button>
+                        <button type="submit" class="btn-salvar">Salvar</button>
+                    </div>
+                </form>
             </div>
         `;
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        this.configurarEventoAcrescentar();
-    }
-
-    configurarEventoAcrescentar() {
-        document.getElementById('form-acrescentar').addEventListener('submit', (e) => {
+        
+        document.body.appendChild(modal);
+        
+        // Configurar eventos para o novo modal
+        const form = modal.querySelector('#form-acrescentar');
+        const btnCancelar = modal.querySelector('.btn-cancelar');
+        
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
-            const texto = document.getElementById('input-acrescentar').value.trim();
+            const texto = modal.querySelector('#input-acrescentar').value.trim();
             
-            if(texto) {
+            if (texto) {
                 this.registroSelecionado.historico.push({
                     texto,
                     data: new Date().toLocaleString('pt-BR'),
@@ -140,7 +150,17 @@ class PlantaoManager {
                 
                 this.salvarLocalStorage();
                 this.atualizarInterface();
-                this.fecharModal('acrescentar');
+                modal.remove();
+            }
+        });
+        
+        btnCancelar.addEventListener('click', () => {
+            modal.remove();
+        });
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
             }
         });
     }
@@ -164,8 +184,8 @@ class PlantaoManager {
     }
 
     atualizarInterface() {
-        this.elements.registrosContainer.innerHTML = this.plantaoAtivo.registros
-            .map(registro => `
+        this.elements.registrosContainer.innerHTML = this.plantaoAtivo.registros.length > 0 
+            ? this.plantaoAtivo.registros.map(registro => `
                 <div class="registro-card">
                     <div class="cabecalho-registro">
                         <h3>${registro.paciente}</h3>
@@ -184,23 +204,24 @@ class PlantaoManager {
                         `).join('')}
                     </div>
                 </div>
-            `).join('');
+            `).join('')
+            : '<div class="sem-registros">Nenhum registro encontrado</div>';
     }
 
-    fecharModal(tipo = 'principal') {
-        const modal = document.getElementById(`modal-${tipo}`);
-        if(modal) modal.remove();
+    fecharModal() {
+        this.elements.modal.style.display = 'none';
         this.elements.form.reset();
-        if(tipo === 'principal') {
-            this.elements.modal.style.display = 'none';
-        }
     }
 
     atualizarHorario() {
+        this.elements.horarioInicio.textContent = new Date().toLocaleString('pt-BR');
         setInterval(() => {
             this.elements.horarioInicio.textContent = new Date().toLocaleString('pt-BR');
         }, 1000);
     }
 }
 
-const plantao = new PlantaoManager();
+// CORREÇÃO FINAL: Instância única após o DOM estar pronto
+document.addEventListener('DOMContentLoaded', () => {
+    const plantao = new PlantaoManager();
+});
