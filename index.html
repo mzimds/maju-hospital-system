@@ -26,6 +26,7 @@
             <span class="texto">Novo Registro</span>
         </button>
 
+        <!-- Modal para Novo Registro -->
         <div class="modal" id="modal">
             <div class="modal-content">
                 <h2>Novo Registro</h2>
@@ -51,6 +52,27 @@
                     <div class="modal-botoes">
                         <button type="button" class="btn-cancelar">Cancelar</button>
                         <button type="submit" class="btn-salvar">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal para Acréscimo de Informações -->
+        <div class="modal modal-acrescentar" id="modal-acrescentar">
+            <div class="modal-content">
+                <h2>Nova Informação</h2>
+                <form id="form-acrescentar">
+                    <div class="form-group">
+                        <textarea 
+                            id="input-acrescentar" 
+                            placeholder="Descreva a nova ocorrência..." 
+                            rows="4"
+                            required
+                        ></textarea>
+                    </div>
+                    <div class="modal-botoes">
+                        <button type="button" class="btn-cancelar btn-cancelar-acrescentar">Cancelar</button>
+                        <button type="button" class="btn-salvar btn-salvar-acrescentar">Salvar</button>
                     </div>
                 </form>
             </div>
