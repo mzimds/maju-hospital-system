@@ -224,3 +224,24 @@ header {
     transform: translateX(-50%) scale(1.05);
     box-shadow: 0 6px 15px rgba(52, 152, 219, 0.5);
 }
+
+/* Modal de Acréscimo */
+.modal-acrescentar {
+    display: none;
+}
+
+/* Botões específicos do modal de acréscimo */
+.btn-cancelar-acrescentar, 
+.btn-salvar-acrescentar {
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-salvar-acrescentar { color: #2ecc71; }
+.btn-cancelar-acrescentar { color: #e74c3c !important; }
