@@ -112,6 +112,14 @@ header {
     padding: 1rem;
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    /* Borda lateral sutil */
+    border-left: 3px solid rgba(52, 152, 219, 0.2);
+}
+
+.registro-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
 .cabecalho-registro {
@@ -246,10 +254,10 @@ header {
 .btn-salvar-acrescentar { color: #2ecc71; }
 .btn-cancelar-acrescentar { color: #e74c3c !important; }
 
-/* ===== MELHORIAS DE ESPAÇAMENTO E EXPANSÃO ===== */
+/* ===== MELHORIAS ESTÉTICAS ===== */
 .entrada-registro {
-    padding: 0.8rem 0;
-    margin-bottom: 0.8rem;
+    padding: 1rem 0;
+    margin-bottom: 1rem;
     border-bottom: 1px solid #f0f0f0;
 }
 
@@ -257,6 +265,20 @@ header {
     margin-bottom: 0;
     padding-bottom: 0;
     border-bottom: none;
+}
+
+.entrada-registro p {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+    color: #2c3e50;
+}
+
+.entrada-registro small {
+    display: block;
+    color: #3498db;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    font-style: italic;
 }
 
 .historico-registro {
@@ -278,4 +300,16 @@ header {
     font-weight: 600;
     font-size: 0.9rem;
     padding: 0.3rem 0;
+    text-align: right;
+    width: 100%;
+}
+
+.sem-registros {
+    text-align: center;
+    padding: 2rem;
+    color: #7f8c8d;
+    font-style: italic;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
