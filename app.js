@@ -189,9 +189,22 @@ class PlantaoManager {
                             </div>
                         `).join('')}
                     </div>
+                    ${registro.historico.length > 3 ? `
+                        <button class="btn-expandir" data-id="${registro.id}">Expandir</button>
+                    ` : ''}
                 </div>
             `).join('')
             : '<div class="sem-registros">Nenhum registro encontrado</div>';
+        
+        // Adiciona eventos aos botões de expandir
+        document.querySelectorAll('.btn-expandir').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const card = e.target.closest('.registro-card');
+                const content = card.querySelector('.historico-registro');
+                content.classList.toggle('expandido');
+                e.target.textContent = content.classList.contains('expandido') ? 'Recolher' : 'Expandir';
+            });
+        });
     }
 
     fecharModal() {
