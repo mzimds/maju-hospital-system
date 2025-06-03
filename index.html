@@ -19,12 +19,32 @@
             <button id="btn-encerrar">Encerrar</button>
         </header>
 
-        <main class="registros" id="registros"></main>
+        <div class="abas">
+            <div class="aba ativa" data-aba="plantao">Plantão Ativo</div>
+            <div class="aba" data-aba="historico">Histórico</div>
+        </div>
 
-        <button class="btn-flutuante" id="btn-novo">
-            <span class="icon">+</span>
-            <span class="texto">Novo Registro</span>
-        </button>
+        <div class="conteudo-aba ativa" id="aba-plantao">
+            <!-- Barra de pesquisa -->
+            <div class="barra-pesquisa">
+                <div class="pesquisa-container">
+                    <input type="text" id="input-busca" placeholder="Buscar paciente...">
+                    <span class="icone-busca">🔍</span>
+                    <div class="sugestoes" id="sugestoes-busca"></div>
+                </div>
+            </div>
+            
+            <main class="registros" id="registros"></main>
+
+            <button class="btn-flutuante" id="btn-novo">
+                <span class="icon">+</span>
+                <span class="texto">Novo Registro</span>
+            </button>
+        </div>
+
+        <div class="conteudo-aba" id="aba-historico">
+            <div class="historico-plantao" id="historico-plantao"></div>
+        </div>
 
         <!-- Modal para Novo Registro -->
         <div class="modal" id="modal">
@@ -73,6 +93,26 @@
                     <div class="modal-botoes">
                         <button type="button" class="btn-cancelar btn-cancelar-acrescentar">Cancelar</button>
                         <button type="button" class="btn-salvar btn-salvar-acrescentar">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal para Encerramento de Plantão -->
+        <div class="modal" id="modal-encerrar">
+            <div class="modal-content">
+                <h2>Encerrar Plantão</h2>
+                <form id="form-encerrar">
+                    <div class="form-group">
+                        <textarea 
+                            id="relatorio-encerramento" 
+                            placeholder="Relatório final do plantão (opcional)..."
+                            rows="5"
+                        ></textarea>
+                    </div>
+                    <div class="modal-botoes">
+                        <button type="button" class="btn-cancelar" id="btn-cancelar-encerrar">Cancelar</button>
+                        <button type="submit" class="btn-salvar">Confirmar Encerramento</button>
                     </div>
                 </form>
             </div>
