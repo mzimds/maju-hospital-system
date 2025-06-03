@@ -38,7 +38,16 @@ header {
 /* ===== AJUSTE MANUAL DO BOTÃO ENCERRAR/INICIAR ===== */
 #btn-encerrar {
     position: relative;
-    top: 13px; /* Altere este valor para ajustar a posição vertical */
+    top: 13px;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    color: #e74c3c;
 }
 
 /* ===== STATUS ===== */
@@ -83,7 +92,6 @@ header {
 }
 
 /* ===== BOTÕES ===== */
-#btn-encerrar, 
 .btn-cancelar, 
 .btn-salvar {
     background: none !important;
@@ -96,9 +104,74 @@ header {
     text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-#btn-encerrar { color: #e74c3c; }
 .btn-salvar { color: #2ecc71; }
 .btn-cancelar { color: #e74c3c !important; }
+
+/* ===== BARRA DE PESQUISA ===== */
+.barra-pesquisa {
+    margin-bottom: 1.5rem;
+}
+
+.pesquisa-container {
+    position: relative;
+}
+
+#input-busca {
+    width: 100%;
+    padding: 0.8rem 2.5rem 0.8rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 30px;
+    font-size: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: all 0.3s;
+}
+
+#input-busca:focus {
+    outline: none;
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.icone-busca {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #7f8c8d;
+}
+
+.sugestoes {
+    position: absolute;
+    width: 100%;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    z-index: 10;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+}
+
+.sugestao-item {
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.sugestao-item:last-child {
+    border-bottom: none;
+}
+
+.sugestao-item:hover {
+    background-color: #f5f7fa;
+}
+
+.sugestao-item.destaque {
+    background-color: #e8f4fe;
+    font-weight: 600;
+}
 
 /* ===== REGISTROS ===== */
 #registros {
@@ -113,7 +186,6 @@ header {
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
-    /* Borda lateral sutil */
     border-left: 3px solid rgba(52, 152, 219, 0.2);
 }
 
@@ -165,12 +237,15 @@ header {
     border-radius: 10px;
     width: 90%;
     max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
-/* ===== AJUSTE MANUAL DO TÍTULO DO MODAL ===== */
 .modal-content h2 {
-    margin-top: -10px; /* Altere este valor para ajustar a posição vertical */
+    margin-top: -10px;
     margin-bottom: 1.5rem;
+    color: var(--primary);
+    text-align: center;
 }
 
 .form-group {
@@ -312,4 +387,89 @@ header {
     background: white;
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* ===== HISTÓRICO DE PLANTÕES ===== */
+.plantao-card {
+    background: white;
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-left: 4px solid #3498db;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.plantao-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.plantao-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.plantao-detalhes {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+    display: none;
+}
+
+.plantao-card.expandido .plantao-detalhes {
+    display: block;
+}
+
+.plantao-resumo {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.plantao-data {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.plantao-registros {
+    margin-top: 1rem;
+}
+
+.plantao-registro-item {
+    padding: 0.8rem;
+    margin-bottom: 0.8rem;
+    background: #f9f9f9;
+    border-radius: 8px;
+}
+
+/* Abas */
+.abas {
+    display: flex;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #ddd;
+}
+
+.aba {
+    padding: 0.8rem 1.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: #7f8c8d;
+    transition: all 0.3s;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+}
+
+.aba.ativa {
+    color: var(--primary);
+    border-bottom: 3px solid var(--secondary);
+}
+
+.conteudo-aba {
+    display: none;
+}
+
+.conteudo-aba.ativa {
+    display: block;
 }
