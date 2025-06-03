@@ -116,7 +116,8 @@ header {
     position: relative;
 }
 
-#input-busca {
+#input-busca,
+#input-busca-historico {
     width: 100%;
     padding: 0.8rem 2.5rem 0.8rem 1rem;
     border: 1px solid #ddd;
@@ -126,7 +127,8 @@ header {
     transition: all 0.3s;
 }
 
-#input-busca:focus {
+#input-busca:focus,
+#input-busca-historico:focus {
     outline: none;
     border-color: var(--secondary);
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
