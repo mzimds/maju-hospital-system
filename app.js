@@ -3,8 +3,10 @@ class PlantaoManager {
         this.plantaoAtivo = {
             ativo: JSON.parse(localStorage.getItem('plantaoAtivo')) ?? true,
             registros: JSON.parse(localStorage.getItem('registros')) || [],
-            historico: JSON.parse(localStorage.getItem('historicoPlantao')) || []
+            historico: JSON.parse(localStorage.getItem('historicoPlantao')) || [],
+            dataInicio: JSON.parse(localStorage.getItem('dataInicio')) || new Date().toISOString()
         };
+        
         this.registroSelecionado = null;
         this.initElements();
         this.initEventos();
@@ -20,11 +22,18 @@ class PlantaoManager {
             modal: document.getElementById('modal'),
             form: document.getElementById('form'),
             registrosContainer: document.getElementById('registros'),
+            historicoContainer: document.getElementById('historico-plantao'),
             horarioInicio: document.getElementById('horario-inicio'),
             statusElement: document.querySelector('.status'),
             statusTexto: document.getElementById('status-texto'),
             modalAcrescentar: document.getElementById('modal-acrescentar'),
-            inputAcrescentar: document.getElementById('input-acrescentar')
+            inputAcrescentar: document.getElementById('input-acrescentar'),
+            modalEncerrar: document.getElementById('modal-encerrar'),
+            formEncerrar: document.getElementById('form-encerrar'),
+            abas: document.querySelectorAll('.aba'),
+            conteudoAbas: document.querySelectorAll('.conteudo-aba'),
+            inputBusca: document.getElementById('input-busca'),
+            sugestoesBusca: document.getElementById('sugestoes-busca')
         };
     }
 
@@ -32,18 +41,39 @@ class PlantaoManager {
         // Botão Novo Registro
         this.elements.btnNovo.addEventListener('click', () => this.abrirModal());
         
-        // Botão Encerrar/Iniciar Plantão
+        // Botão Encerrar Plantão
         this.elements.btnEncerrar.addEventListener('click', () => {
-            this.plantaoAtivo.ativo ? this.encerrarPlantao() : this.iniciarPlantao();
+            this.abrirModalEncerrar();
+        });
+
+        // Troca de abas
+        this.elements.abas.forEach(aba => {
+            aba.addEventListener('click', () => {
+                const abaAlvo = aba.dataset.aba;
+                this.mostrarAba(abaAlvo);
+            });
         });
 
         // Formulário de Novo Registro
         this.elements.form.addEventListener('submit', (e) => this.salvarRegistro(e));
         
+        // Formulário de Encerramento
+        this.elements.formEncerrar.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.encerrarPlantao();
+        });
+        
         // Fechar Modal Principal
         this.elements.modal.addEventListener('click', (e) => {
             if(e.target.classList.contains('btn-cancelar') || e.target === this.elements.modal) {
                 this.fecharModal();
+            }
+        });
+
+        // Fechar Modal de Encerramento
+        this.elements.modalEncerrar.addEventListener('click', (e) => {
+            if(e.target.classList.contains('btn-cancelar') || e.target === this.elements.modalEncerrar) {
+                this.fecharModalEncerrar();
             }
         });
 
@@ -70,6 +100,21 @@ class PlantaoManager {
                 this.salvarAcrescimo();
             }
         });
+        
+        // Barra de pesquisa
+        this.elements.inputBusca.addEventListener('input', () => {
+            this.atualizarSugestoes();
+        });
+        
+        this.elements.inputBusca.addEventListener('focus', () => {
+            this.atualizarSugestoes();
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.pesquisa-container')) {
+                this.elements.sugestoesBusca.style.display = 'none';
+            }
+        });
     }
 
     atualizarStatusPlantao() {
@@ -89,21 +134,46 @@ class PlantaoManager {
     }
 
     encerrarPlantao() {
-        if(confirm('Deseja realmente encerrar o plantão?')) {
-            this.plantaoAtivo.ativo = false;
-            this.plantaoAtivo.historico.push({
-                data: new Date().toLocaleString('pt-BR'),
-                registros: this.plantaoAtivo.registros
-            });
-            this.plantaoAtivo.registros = [];
-            this.salvarLocalStorage();
-            this.atualizarInterface();
-            this.atualizarStatusPlantao();
-        }
+        const relatorio = document.getElementById('relatorio-encerramento').value.trim();
+        
+        this.plantaoAtivo.ativo = false;
+        
+        const dataTermino = new Date();
+        const dataInicio = new Date(this.plantaoAtivo.dataInicio);
+        
+        const plantaoEncerrado = {
+            id: `plantao-${Date.now()}`,
+            setor: "UTI-01",
+            inicio: dataInicio.toISOString(),
+            termino: dataTermino.toISOString(),
+            duracao: this.calcularDuracao(dataInicio, dataTermino),
+            responsavel: "Enf. Responsável",
+            registros: [...this.plantaoAtivo.registros],
+            relatorioFinal: relatorio || "Nenhum relatório fornecido"
+        };
+        
+        this.plantaoAtivo.historico.unshift(plantaoEncerrado);
+        this.plantaoAtivo.registros = [];
+        
+        this.salvarLocalStorage();
+        this.atualizarInterface();
+        this.atualizarStatusPlantao();
+        this.fecharModalEncerrar();
+        
+        alert('Plantão encerrado com sucesso!');
+    }
+
+    calcularDuracao(inicio, termino) {
+        const diffMs = termino - inicio;
+        const diffMins = Math.floor(diffMs / 60000);
+        const hours = Math.floor(diffMins / 60);
+        const minutes = diffMins % 60;
+        return `${hours}h${minutes.toString().padStart(2, '0')}m`;
     }
 
     iniciarPlantao() {
         this.plantaoAtivo.ativo = true;
+        this.plantaoAtivo.dataInicio = new Date().toISOString();
         this.salvarLocalStorage();
         this.atualizarStatusPlantao();
     }
@@ -112,6 +182,7 @@ class PlantaoManager {
         localStorage.setItem('plantaoAtivo', JSON.stringify(this.plantaoAtivo.ativo));
         localStorage.setItem('registros', JSON.stringify(this.plantaoAtivo.registros));
         localStorage.setItem('historicoPlantao', JSON.stringify(this.plantaoAtivo.historico));
+        localStorage.setItem('dataInicio', JSON.stringify(this.plantaoAtivo.dataInicio));
     }
 
     abrirModal() {
@@ -123,9 +194,18 @@ class PlantaoManager {
         this.elements.inputAcrescentar.focus();
     }
 
+    abrirModalEncerrar() {
+        this.elements.modalEncerrar.style.display = 'flex';
+    }
+
     fecharModalAcrescentar() {
         this.elements.modalAcrescentar.style.display = 'none';
         this.elements.inputAcrescentar.value = '';
+    }
+
+    fecharModalEncerrar() {
+        this.elements.modalEncerrar.style.display = 'none';
+        document.getElementById('relatorio-encerramento').value = '';
     }
 
     salvarRegistro(e) {
@@ -167,6 +247,127 @@ class PlantaoManager {
             this.atualizarInterface();
             this.fecharModalAcrescentar();
         }
+    }
+
+    atualizarSugestoes() {
+        const termo = this.elements.inputBusca.value.toLowerCase().trim();
+        this.elements.sugestoesBusca.innerHTML = '';
+        
+        if (termo === '') {
+            this.elements.sugestoesBusca.style.display = 'none';
+            return;
+        }
+        
+        const pacientes = this.plantaoAtivo.registros.map(registro => registro.paciente);
+        const sugestoes = pacientes.filter(paciente => 
+            paciente.toLowerCase().includes(termo)
+        );
+        
+        if (sugestoes.length === 0) {
+            this.elements.sugestoesBusca.innerHTML = `
+                <div class="sugestao-item">
+                    Nenhum paciente encontrado
+                </div>
+            `;
+            this.elements.sugestoesBusca.style.display = 'block';
+            return;
+        }
+        
+        sugestoes.slice(0, 5).forEach(sugestao => {
+            const item = document.createElement('div');
+            item.className = 'sugestao-item';
+            item.textContent = sugestao;
+            
+            // Destacar o termo buscado
+            const termoIndex = sugestao.toLowerCase().indexOf(termo);
+            if (termoIndex !== -1) {
+                const antes = sugestao.substring(0, termoIndex);
+                const destaque = sugestao.substring(termoIndex, termoIndex + termo.length);
+                const depois = sugestao.substring(termoIndex + termo.length);
+                
+                item.innerHTML = `
+                    ${antes}<strong>${destaque}</strong>${depois}
+                `;
+            }
+            
+            item.addEventListener('click', () => {
+                this.elements.inputBusca.value = sugestao;
+                this.filtrarRegistros();
+                this.elements.sugestoesBusca.style.display = 'none';
+            });
+            
+            this.elements.sugestoesBusca.appendChild(item);
+        });
+        
+        this.elements.sugestoesBusca.style.display = 'block';
+    }
+
+    filtrarRegistros() {
+        const termo = this.elements.inputBusca.value.toLowerCase().trim();
+        
+        document.querySelectorAll('.registro-card').forEach(card => {
+            const nomePaciente = card.querySelector('h3').textContent.toLowerCase();
+            if (termo === '' || nomePaciente.includes(termo)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    mostrarAba(abaNome) {
+        // Atualizar abas
+        this.elements.abas.forEach(aba => {
+            aba.classList.toggle('ativa', aba.dataset.aba === abaNome);
+        });
+        
+        // Atualizar conteúdo das abas
+        this.elements.conteudoAbas.forEach(aba => {
+            aba.classList.toggle('ativa', aba.id === `aba-${abaNome}`);
+        });
+        
+        // Se for a aba de histórico, carregar os dados
+        if (abaNome === 'historico') {
+            this.carregarHistoricoPlantao();
+        }
+    }
+
+    carregarHistoricoPlantao() {
+        this.elements.historicoContainer.innerHTML = this.plantaoAtivo.historico.length > 0 
+            ? this.plantaoAtivo.historico.map(plantao => `
+                <div class="plantao-card">
+                    <div class="plantao-info">
+                        <div>
+                            <div class="plantao-resumo">Plantão encerrado</div>
+                            <div class="plantao-data">${new Date(plantao.inicio).toLocaleString('pt-BR')} - ${new Date(plantao.termino).toLocaleString('pt-BR')}</div>
+                            <div class="plantao-data">Duração: ${plantao.duracao}</div>
+                        </div>
+                        <div>${plantao.registros.length} registros</div>
+                    </div>
+                    <div class="plantao-detalhes">
+                        <h3>Relatório Final:</h3>
+                        <p>${plantao.relatorioFinal}</p>
+                        
+                        <h3>Registros:</h3>
+                        <div class="plantao-registros">
+                            ${plantao.registros.slice(0, 3).map(registro => `
+                                <div class="plantao-registro-item">
+                                    <strong>${registro.paciente}</strong>
+                                    <p>${registro.historico[0].texto.substring(0, 100)}...</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('')
+            : '<div class="sem-registros">Nenhum plantão encerrado encontrado</div>';
+        
+        // Adicionar eventos para expandir os detalhes
+        document.querySelectorAll('.plantao-card').forEach(card => {
+            card.addEventListener('click', () => {
+                card.classList.toggle('expandido');
+            });
+        });
     }
 
     atualizarInterface() {
@@ -220,6 +421,9 @@ class PlantaoManager {
                 }
             });
         });
+        
+        // Aplicar filtro se houver texto na busca
+        this.filtrarRegistros();
     }
 
     fecharModal() {
