@@ -1,14 +1,16 @@
 class PlantaoManager {
     constructor() {
+        // Inicializa o estado do plantão
         this.plantaoAtivo = {
             ativo: JSON.parse(localStorage.getItem('plantaoAtivo')) ?? true,
             registros: JSON.parse(localStorage.getItem('registros')) || [],
             historico: JSON.parse(localStorage.getItem('historicoPlantao')) || [],
             dataInicio: JSON.parse(localStorage.getItem('dataInicio')) || new Date().toISOString(),
-            pontoAtencaoVisto: JSON.parse(localStorage.getItem('pontoAtencaoVisto')) || false
+            pontosAtencao: JSON.parse(localStorage.getItem('pontosAtencao')) || []
         };
-        
+
         this.registroSelecionado = null;
+        this.pontoSelecionado = null;
         this.initElements();
         this.initEventos();
         this.atualizarInterface();
@@ -39,26 +41,32 @@ class PlantaoManager {
             barraPesquisaPlantao: document.getElementById('barra-pesquisa-plantao'),
             abaPlantaoAtivo: document.getElementById('aba-plantao-ativo'),
             abaPontosAtencao: document.getElementById('aba-pontos-atencao'),
-            pontosAtencaoContainer: document.getElementById('pontos-atencao-container')
+            pontosAtencaoContainer: document.getElementById('pontos-atencao-container'),
+            btnNovoPonto: document.getElementById('btn-novo-ponto'),
+            // Novos elementos
+            modalNovoPonto: document.getElementById('modal-novo-ponto'),
+            formNovoPonto: document.getElementById('form-novo-ponto'),
+            inputPontoTexto: document.getElementById('input-ponto-texto')
         };
     }
 
     initEventos() {
+        // Botão novo registro
         this.elements.btnNovo.addEventListener('click', () => this.abrirModal());
         
+        // Botão novo ponto de atenção
+        this.elements.btnNovoPonto.addEventListener('click', () => this.abrirModalNovoPonto());
+        
+        // Botão encerrar/iniciar plantão
         this.elements.btnEncerrar.addEventListener('click', () => {
             if (this.plantaoAtivo.ativo) {
-                // Verifica se há ponto de atenção pendente
-                if (this.temPontoAtencaoPendente()) {
-                    alert('Não é possível encerrar o plantão enquanto houver um ponto de atenção pendente.');
-                    return;
-                }
                 this.abrirModalEncerrar();
             } else {
                 this.iniciarPlantao();
             }
         });
 
+        // Abas
         this.elements.abas.forEach(aba => {
             aba.addEventListener('click', () => {
                 const abaAlvo = aba.dataset.aba;
@@ -66,13 +74,22 @@ class PlantaoManager {
             });
         });
 
+        // Formulário de novo registro
         this.elements.form.addEventListener('submit', (e) => this.salvarRegistro(e));
         
+        // Formulário de encerramento
         this.elements.formEncerrar.addEventListener('submit', (e) => {
             e.preventDefault();
             this.encerrarPlantao();
         });
         
+        // Formulário de novo ponto
+        this.elements.formNovoPonto.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.salvarNovoPonto();
+        });
+        
+        // Fechar modais
         this.elements.modal.addEventListener('click', (e) => {
             if(e.target.classList.contains('btn-cancelar') || e.target === this.elements.modal) {
                 this.fecharModal();
@@ -85,6 +102,14 @@ class PlantaoManager {
             }
         });
 
+        this.elements.modalNovoPonto.addEventListener('click', (e) => {
+            if(e.target.classList.contains('btn-cancelar-novo-ponto') || 
+               e.target === this.elements.modalNovoPonto) {
+                this.fecharModalNovoPonto();
+            }
+        });
+
+        // Evento para adicionar informação a registro
         this.elements.registrosContainer.addEventListener('click', (e) => {
             if (e.target.classList.contains('btn-acrescentar')) {
                 const registroId = parseInt(e.target.dataset.id);
@@ -93,6 +118,7 @@ class PlantaoManager {
             }
         });
 
+        // Eventos para o modal de acréscimo
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('btn-cancelar-acrescentar') || 
                 e.target.classList.contains('modal-acrescentar')) {
@@ -105,6 +131,7 @@ class PlantaoManager {
             }
         });
         
+        // Barra de busca
         this.elements.inputBusca.addEventListener('input', () => {
             this.atualizarSugestoes();
             this.filtrarRegistros();
@@ -114,28 +141,17 @@ class PlantaoManager {
             this.atualizarSugestoes();
         });
         
+        // Barra de busca do histórico
         this.elements.inputBuscaHistorico.addEventListener('input', () => {
             this.filtrarHistorico();
         });
         
+        // Fechar sugestões ao clicar fora
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.pesquisa-container')) {
                 this.elements.sugestoesBusca.style.display = 'none';
             }
         });
-    }
-
-    temPontoAtencaoPendente() {
-        // Se já foi marcado como visto, não há pendência
-        if (this.plantaoAtivo.pontoAtencaoVisto) return false;
-        
-        // Verifica se existe um plantão anterior com observações para o próximo plantão
-        // Considera o último plantão encerrado (o primeiro do histórico)
-        const plantaoAnterior = this.plantaoAtivo.historico[0];
-        if (plantaoAnterior && plantaoAnterior.observacoesProximoPlantao) {
-            return true;
-        }
-        return false;
     }
 
     atualizarStatusPlantao() {
@@ -147,10 +163,10 @@ class PlantaoManager {
             this.elements.btnEncerrar.style.color = '#e74c3c';
             
             this.elements.barraPesquisaPlantao.style.display = 'block';
-            document.getElementById('btn-novo').style.display = 'flex';
+            this.elements.btnNovo.style.display = 'flex';
 
             this.elements.abaPlantaoAtivo.style.display = 'flex';
-            this.elements.abaPontosAtencao.style.display = 'none';
+            this.elements.abaPontosAtencao.style.display = 'flex';
             this.mostrarAba('plantao');
         } else {
             this.elements.statusElement.classList.remove('ativo');
@@ -160,7 +176,7 @@ class PlantaoManager {
             this.elements.btnEncerrar.style.color = '#2ecc71';
             
             this.elements.barraPesquisaPlantao.style.display = 'none';
-            document.getElementById('btn-novo').style.display = 'none';
+            this.elements.btnNovo.style.display = 'none';
 
             this.elements.abaPlantaoAtivo.style.display = 'none';
             this.elements.abaPontosAtencao.style.display = 'flex';
@@ -173,10 +189,12 @@ class PlantaoManager {
         const observacoesProximoPlantao = document.getElementById('observacoes-proximo-plantao').value.trim();
         
         this.plantaoAtivo.ativo = false;
-        this.plantaoAtivo.pontoAtencaoVisto = false;
         
         const dataTermino = new Date();
         const dataInicio = new Date(this.plantaoAtivo.dataInicio);
+        
+        // Filtrar pontos não resolvidos para transferir
+        const pontosNaoResolvidos = this.plantaoAtivo.pontosAtencao.filter(p => !p.resolvido);
         
         const plantaoEncerrado = {
             id: `plantao-${Date.now()}`,
@@ -186,6 +204,7 @@ class PlantaoManager {
             duracao: this.calcularDuracao(dataInicio, dataTermino),
             responsavel: "Enf. Responsável",
             registros: [...this.plantaoAtivo.registros],
+            pontosAtencao: [...pontosNaoResolvidos],
             relatorioFinal: relatorio || "Nenhum relatório fornecido",
             observacoesProximoPlantao: observacoesProximoPlantao ? {
                 texto: observacoesProximoPlantao,
@@ -196,6 +215,7 @@ class PlantaoManager {
         
         this.plantaoAtivo.historico.unshift(plantaoEncerrado);
         this.plantaoAtivo.registros = [];
+        this.plantaoAtivo.pontosAtencao = pontosNaoResolvidos; // Manter pontos não resolvidos
         
         this.salvarLocalStorage();
         this.atualizarInterface();
@@ -225,11 +245,20 @@ class PlantaoManager {
         localStorage.setItem('registros', JSON.stringify(this.plantaoAtivo.registros));
         localStorage.setItem('historicoPlantao', JSON.stringify(this.plantaoAtivo.historico));
         localStorage.setItem('dataInicio', JSON.stringify(this.plantaoAtivo.dataInicio));
-        localStorage.setItem('pontoAtencaoVisto', JSON.stringify(this.plantaoAtivo.pontoAtencaoVisto));
+        localStorage.setItem('pontosAtencao', JSON.stringify(this.plantaoAtivo.pontosAtencao));
     }
 
     abrirModal() {
         this.elements.modal.style.display = 'flex';
+    }
+    
+    abrirModalNovoPonto() {
+        this.elements.modalNovoPonto.style.display = 'flex';
+    }
+    
+    fecharModalNovoPonto() {
+        this.elements.modalNovoPonto.style.display = 'none';
+        this.elements.formNovoPonto.reset();
     }
 
     abrirModalAcrescentar() {
@@ -252,6 +281,11 @@ class PlantaoManager {
         document.getElementById('observacoes-proximo-plantao').value = '';
     }
 
+    fecharModal() {
+        this.elements.modal.style.display = 'none';
+        this.elements.form.reset();
+    }
+
     salvarRegistro(e) {
         e.preventDefault();
         
@@ -267,13 +301,36 @@ class PlantaoManager {
                 data: new Date().toLocaleString('pt-BR'),
                 autor: "Enf. Responsável"
             }],
-            mostrarTodas: false
+            mostrarTodas: false,
+            ultimaAtualizacao: new Date().toISOString()
         };
 
         this.plantaoAtivo.registros.unshift(novoRegistro);
         this.salvarLocalStorage();
         this.fecharModal();
         this.atualizarInterface();
+    }
+
+    salvarNovoPonto() {
+        const texto = this.elements.inputPontoTexto.value.trim();
+        if (!texto) return;
+        
+        const gravidade = document.querySelector('input[name="gravidade"]:checked').value;
+        
+        const novoPonto = {
+            id: `pa-${Date.now()}`,
+            texto,
+            criadoPor: "Enf. Responsável",
+            dataCriacao: new Date().toISOString(),
+            resolvido: false,
+            dataResolucao: null,
+            gravidade
+        };
+        
+        this.plantaoAtivo.pontosAtencao.unshift(novoPonto);
+        this.salvarLocalStorage();
+        this.fecharModalNovoPonto();
+        this.carregarPontosAtencao();
     }
 
     salvarAcrescimo() {
@@ -286,9 +343,22 @@ class PlantaoManager {
                 autor: "Enf. Responsável"
             });
             
+            // Atualizar timestamp e reordenar
+            this.registroSelecionado.ultimaAtualizacao = new Date().toISOString();
+            
             this.salvarLocalStorage();
             this.atualizarInterface();
             this.fecharModalAcrescentar();
+        }
+    }
+
+    resolverPontoAtencao(id) {
+        const ponto = this.plantaoAtivo.pontosAtencao.find(p => p.id === id);
+        if (ponto) {
+            ponto.resolvido = true;
+            ponto.dataResolucao = new Date().toISOString();
+            this.salvarLocalStorage();
+            this.carregarPontosAtencao();
         }
     }
 
@@ -384,43 +454,61 @@ class PlantaoManager {
     }
 
     carregarPontosAtencao() {
-        if (this.plantaoAtivo.pontoAtencaoVisto) {
-            this.elements.pontosAtencaoContainer.innerHTML = '<div class="sem-registros">Nenhum ponto de atenção pendente.</div>';
+        this.elements.pontosAtencaoContainer.innerHTML = '';
+        
+        // Botão para adicionar novo ponto (apenas durante plantão ativo)
+        if (this.plantaoAtivo.ativo) {
+            const btnNovoPonto = document.createElement('button');
+            btnNovoPonto.className = 'btn-novo-ponto';
+            btnNovoPonto.textContent = '+ Novo Ponto de Atenção';
+            btnNovoPonto.addEventListener('click', () => this.abrirModalNovoPonto());
+            this.elements.pontosAtencaoContainer.appendChild(btnNovoPonto);
+        }
+        
+        if (this.plantaoAtivo.pontosAtencao.length === 0) {
+            const semRegistros = document.createElement('div');
+            semRegistros.className = 'sem-registros';
+            semRegistros.textContent = 'Nenhum ponto de atenção registrado';
+            this.elements.pontosAtencaoContainer.appendChild(semRegistros);
             return;
         }
-
-        // Busca o plantão anterior com observações
-        const plantaoAnterior = this.plantaoAtivo.historico[0];
         
-        if (plantaoAnterior && plantaoAnterior.observacoesProximoPlantao) {
-            const obs = plantaoAnterior.observacoesProximoPlantao;
-            this.elements.pontosAtencaoContainer.innerHTML = `
-                <div class="ponto-atencao-card">
-                    <div class="cabecalho-registro">
-                        <h3>Ponto de Atenção</h3>
-                        <div class="toggle-container" title="Marcar como resolvido">
-                            <label class="switch">
-                                <input type="checkbox" class="toggle-visto">
-                                <span class="slider"></span>
-                            </label>
+        this.plantaoAtivo.pontosAtencao.forEach(ponto => {
+            const card = document.createElement('div');
+            card.className = `ponto-atencao-card ${ponto.gravidade} ${ponto.resolvido ? 'ponto-resolvido' : ''}`;
+            card.dataset.id = ponto.id;
+            
+            card.innerHTML = `
+                <div class="cabecalho-registro">
+                    <h3>Ponto de Atenção <span class="gravidade-tag">${ponto.gravidade.toUpperCase()}</span></h3>
+                    ${!ponto.resolvido ? `
+                        <button class="btn-resolver">Marcar como Resolvido</button>
+                    ` : ''}
+                </div>
+                <div class="historico-registro">
+                    <div class="entrada-registro">
+                        <p>${ponto.texto}</p>
+                        <small>Criado por: ${ponto.criadoPor} - ${new Date(ponto.dataCriacao).toLocaleString('pt-BR')}</small>
+                    </div>
+                    ${ponto.resolvido ? `
+                        <div class="entrada-registro">
+                            <p><strong>RESOLVIDO</strong></p>
+                            <small>Resolvido em: ${new Date(ponto.dataResolucao).toLocaleString('pt-BR')}</small>
                         </div>
-                    </div>
-                    <div class="conteudo-ponto">
-                        <p>${obs.texto}</p>
-                        <small>${obs.autor} - ${obs.data}</small>
-                    </div>
+                    ` : ''}
                 </div>
             `;
-
-            const toggle = this.elements.pontosAtencaoContainer.querySelector('.toggle-visto');
-            toggle.addEventListener('change', () => {
-                this.plantaoAtivo.pontoAtencaoVisto = true;
-                this.salvarLocalStorage();
-                this.carregarPontosAtencao();
-            });
-        } else {
-            this.elements.pontosAtencaoContainer.innerHTML = '<div class="sem-registros">Nenhum ponto de atenção foi registrado no plantão anterior.</div>';
-        }
+            
+            this.elements.pontosAtencaoContainer.appendChild(card);
+            
+            // Evento para marcar como resolvido
+            if (!ponto.resolvido) {
+                const btnResolver = card.querySelector('.btn-resolver');
+                btnResolver.addEventListener('click', () => {
+                    this.resolverPontoAtencao(ponto.id);
+                });
+            }
+        });
     }
 
     carregarHistoricoPlantao() {
@@ -434,46 +522,41 @@ class PlantaoManager {
                 
                 return `
                 <div class="plantao-card">
-                    <div class="plantao-info">
-                        <div>
-                            <div class="plantao-resumo">${inicioDate.toLocaleDateString('pt-BR')} - ${diaSemanaInicio}</div>
-                            <div class="plantao-data">Início: ${inicioDate.toLocaleString('pt-BR')}</div>
-                            <div class="plantao-data">Término: ${terminoDate.toLocaleString('pt-BR')}</div>
-                            <div class="plantao-data">Duração: ${plantao.duracao}</div>
-                        </div>
-                        <div>${plantao.registros.length} registros</div>
+                    <div class="cabecalho-registro">
+                        <h3>Plantão ${inicioDate.toLocaleDateString('pt-BR')}</h3>
+                        <div>${plantao.duracao}</div>
                     </div>
-                    <div class="plantao-detalhes">
-                        <h3>Relatório Final:</h3>
-                        <p>${plantao.relatorioFinal}</p>
+                    <div class="historico-registro">
+                        <div class="entrada-registro">
+                            <p><strong>${diaSemanaInicio}</strong></p>
+                            <small>Início: ${inicioDate.toLocaleString('pt-BR')}</small>
+                            <small>Término: ${terminoDate.toLocaleString('pt-BR')}</small>
+                        </div>
+                        <div class="entrada-registro">
+                            <p><strong>Relatório Final:</strong> ${plantao.relatorioFinal}</p>
+                        </div>
                         ${plantao.observacoesProximoPlantao ? `
-                        <h3>Observações para o próximo plantão:</h3>
-                        <p>${plantao.observacoesProximoPlantao.texto}</p>
+                        <div class="entrada-registro">
+                            <p><strong>Observações:</strong> ${plantao.observacoesProximoPlantao.texto}</p>
+                        </div>
                         ` : ''}
-                        <h3>Registros:</h3>
-                        <div class="plantao-registros">
-                            ${plantao.registros.slice(0, 3).map(registro => `
-                                <div class="plantao-registro-item">
-                                    <strong>${registro.paciente}</strong>
-                                    <p>${registro.historico[0].texto.substring(0, 100)}...</p>
-                                </div>
-                            `).join('')}
+                        <div class="entrada-registro">
+                            <p><strong>${plantao.registros.length} registros</strong></p>
                         </div>
                     </div>
                 </div>
             `}).join('')
             : '<div class="sem-registros">Nenhum plantão encerrado encontrado</div>';
-        
-        document.querySelectorAll('.plantao-card').forEach(card => {
-            card.addEventListener('click', () => {
-                card.classList.toggle('expandido');
-            });
-        });
     }
 
     atualizarInterface() {
-        this.elements.registrosContainer.innerHTML = this.plantaoAtivo.registros.length > 0 
-            ? this.plantaoAtivo.registros.map(registro => {
+        // Ordenar registros pela última atualização (mais recente primeiro)
+        const registrosOrdenados = [...this.plantaoAtivo.registros].sort((a, b) => 
+            new Date(b.ultimaAtualizacao) - new Date(a.ultimaAtualizacao)
+        );
+
+        this.elements.registrosContainer.innerHTML = registrosOrdenados.length > 0 
+            ? registrosOrdenados.map(registro => {
                 const entradasVisiveis = registro.mostrarTodas 
                     ? registro.historico 
                     : registro.historico.slice(0, 3);
@@ -490,7 +573,7 @@ class PlantaoManager {
                                 title="Acrescentar informação"
                             >+</button>
                         </div>
-                        <div class="historico-registro ${registro.mostrarTodas ? 'expandido' : ''}">
+                        <div class="historico-registro">
                             ${entradasVisiveis.map(entry => `
                                 <div class="entrada-registro">
                                     <p>${entry.texto}</p>
@@ -522,18 +605,16 @@ class PlantaoManager {
         });
         
         this.filtrarRegistros();
-    }
-
-    fecharModal() {
-        this.elements.modal.style.display = 'none';
-        this.elements.form.reset();
+        this.carregarPontosAtencao();
     }
 
     atualizarHorario() {
-        this.elements.horarioInicio.textContent = new Date().toLocaleString('pt-BR');
-        setInterval(() => {
+        if (this.elements.horarioInicio) {
             this.elements.horarioInicio.textContent = new Date().toLocaleString('pt-BR');
-        }, 1000);
+            setInterval(() => {
+                this.elements.horarioInicio.textContent = new Date().toLocaleString('pt-BR');
+            }, 1000);
+        }
     }
 }
 
