@@ -20,12 +20,12 @@
         </header>
 
         <div class="abas">
-            <div class="aba ativa" data-aba="plantao">Plantão Ativo</div>
-            <div class="aba" data-aba="historico">Histórico</div>
+            <div class="aba ativa" data-aba="plantao" id="aba-plantao-ativo">Plantão Ativo</div>
+            <div class="aba" data-aba="pontos-atencao" id="aba-pontos-atencao">Pontos de Atenção</div>
+            <div class="aba" data-aba="historico" id="aba-historico">Histórico</div>
         </div>
 
         <div class="conteudo-aba ativa" id="aba-plantao">
-            <!-- Barra de pesquisa (visível apenas com plantão ativo) -->
             <div class="barra-pesquisa" id="barra-pesquisa-plantao">
                 <div class="pesquisa-container">
                     <input type="text" id="input-busca" placeholder="Buscar paciente...">
@@ -42,8 +42,11 @@
             </button>
         </div>
 
+        <div class="conteudo-aba" id="aba-pontos-atencao">
+            <div class="pontos-atencao" id="pontos-atencao-container"></div>
+        </div>
+
         <div class="conteudo-aba" id="aba-historico">
-            <!-- Barra de pesquisa para histórico -->
             <div class="barra-pesquisa">
                 <div class="pesquisa-container">
                     <input type="text" id="input-busca-historico" placeholder="Buscar em histórico...">
@@ -113,8 +116,15 @@
                     <div class="form-group">
                         <textarea 
                             id="relatorio-encerramento" 
-                            placeholder="Relatório final do plantão (opcional). Sugestão: Registre comentários importantes ou pontos de atenção para o próximo plantão..."
+                            placeholder="Relatório final do plantão (opcional)."
                             rows="5"
+                        ></textarea>
+                    </div>
+                    <div class="form-group">
+                        <textarea 
+                            id="observacoes-proximo-plantao" 
+                            placeholder="Observações para o próximo plantão (opcional)..."
+                            rows="3"
                         ></textarea>
                     </div>
                     <div class="modal-botoes">
