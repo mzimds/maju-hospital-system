@@ -48,6 +48,11 @@ class PlantaoManager {
         
         this.elements.btnEncerrar.addEventListener('click', () => {
             if (this.plantaoAtivo.ativo) {
+                // Verifica se há ponto de atenção pendente
+                if (this.temPontoAtencaoPendente()) {
+                    alert('Não é possível encerrar o plantão enquanto houver um ponto de atenção pendente.');
+                    return;
+                }
                 this.abrirModalEncerrar();
             } else {
                 this.iniciarPlantao();
@@ -120,6 +125,19 @@ class PlantaoManager {
         });
     }
 
+    temPontoAtencaoPendente() {
+        // Se já foi marcado como visto, não há pendência
+        if (this.plantaoAtivo.pontoAtencaoVisto) return false;
+        
+        // Verifica se existe um plantão anterior com observações para o próximo plantão
+        // Considera o último plantão encerrado (o primeiro do histórico)
+        const plantaoAnterior = this.plantaoAtivo.historico[0];
+        if (plantaoAnterior && plantaoAnterior.observacoesProximoPlantao) {
+            return true;
+        }
+        return false;
+    }
+
     atualizarStatusPlantao() {
         if(this.plantaoAtivo.ativo) {
             this.elements.statusElement.classList.remove('inativo');
@@ -169,7 +187,11 @@ class PlantaoManager {
             responsavel: "Enf. Responsável",
             registros: [...this.plantaoAtivo.registros],
             relatorioFinal: relatorio || "Nenhum relatório fornecido",
-            observacoesProximoPlantao: observacoesProximoPlantao || ""
+            observacoesProximoPlantao: observacoesProximoPlantao ? {
+                texto: observacoesProximoPlantao,
+                autor: "Enf. Responsável",
+                data: new Date().toLocaleString('pt-BR')
+            } : null
         };
         
         this.plantaoAtivo.historico.unshift(plantaoEncerrado);
@@ -363,35 +385,41 @@ class PlantaoManager {
 
     carregarPontosAtencao() {
         if (this.plantaoAtivo.pontoAtencaoVisto) {
-            this.elements.pontosAtencaoContainer.innerHTML = '<p>Nenhum ponto de atenção pendente.</p>';
+            this.elements.pontosAtencaoContainer.innerHTML = '<div class="sem-registros">Nenhum ponto de atenção pendente.</div>';
             return;
         }
 
         // Busca o plantão anterior com observações
-        const plantaoAnterior = this.plantaoAtivo.historico
-            .find(plantao => plantao.observacoesProximoPlantao);
+        const plantaoAnterior = this.plantaoAtivo.historico[0];
         
         if (plantaoAnterior && plantaoAnterior.observacoesProximoPlantao) {
+            const obs = plantaoAnterior.observacoesProximoPlantao;
             this.elements.pontosAtencaoContainer.innerHTML = `
                 <div class="ponto-atencao-card">
                     <div class="cabecalho-registro">
                         <h3>Ponto de Atenção</h3>
-                        <button class="btn-visto">
-                            <span class="icone-visto">✓</span>
-                            Marcar como visto
-                        </button>
+                        <div class="toggle-container" title="Marcar como resolvido">
+                            <label class="switch">
+                                <input type="checkbox" class="toggle-visto">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
-                    <p>${plantaoAnterior.observacoesProximoPlantao}</p>
+                    <div class="conteudo-ponto">
+                        <p>${obs.texto}</p>
+                        <small>${obs.autor} - ${obs.data}</small>
+                    </div>
                 </div>
             `;
 
-            this.elements.pontosAtencaoContainer.querySelector('.btn-visto').addEventListener('click', () => {
+            const toggle = this.elements.pontosAtencaoContainer.querySelector('.toggle-visto');
+            toggle.addEventListener('change', () => {
                 this.plantaoAtivo.pontoAtencaoVisto = true;
                 this.salvarLocalStorage();
                 this.carregarPontosAtencao();
             });
         } else {
-            this.elements.pontosAtencaoContainer.innerHTML = '<p>Nenhum ponto de atenção foi registrado no plantão anterior.</p>';
+            this.elements.pontosAtencaoContainer.innerHTML = '<div class="sem-registros">Nenhum ponto de atenção foi registrado no plantão anterior.</div>';
         }
     }
 
@@ -403,13 +431,12 @@ class PlantaoManager {
                 const inicioDate = new Date(plantao.inicio);
                 const terminoDate = new Date(plantao.termino);
                 const diaSemanaInicio = diasSemana[inicioDate.getDay()];
-                const diaSemanaTermino = diasSemana[terminoDate.getDay()];
-
+                
                 return `
                 <div class="plantao-card">
                     <div class="plantao-info">
                         <div>
-                            <div class="plantao-resumo">Plantão encerrado em ${inicioDate.toLocaleDateString('pt-BR')} (${diaSemanaInicio})</div>
+                            <div class="plantao-resumo">${inicioDate.toLocaleDateString('pt-BR')} - ${diaSemanaInicio}</div>
                             <div class="plantao-data">Início: ${inicioDate.toLocaleString('pt-BR')}</div>
                             <div class="plantao-data">Término: ${terminoDate.toLocaleString('pt-BR')}</div>
                             <div class="plantao-data">Duração: ${plantao.duracao}</div>
@@ -421,7 +448,7 @@ class PlantaoManager {
                         <p>${plantao.relatorioFinal}</p>
                         ${plantao.observacoesProximoPlantao ? `
                         <h3>Observações para o próximo plantão:</h3>
-                        <p>${plantao.observacoesProximoPlantao}</p>
+                        <p>${plantao.observacoesProximoPlantao.texto}</p>
                         ` : ''}
                         <h3>Registros:</h3>
                         <div class="plantao-registros">
