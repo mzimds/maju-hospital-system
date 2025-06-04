@@ -264,6 +264,7 @@ header {
     padding: 0.5rem;
     border: 1px solid #ddd;
     border-radius: 5px;
+    margin-bottom: 0.8rem;
 }
 
 .modal-botoes {
@@ -474,4 +475,54 @@ header {
 
 .conteudo-aba.ativa {
     display: block;
+}
+
+/* Card de ponto de atenção */
+.ponto-atencao-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.2); /* Sombra vermelha leve */
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+}
+
+.ponto-atencao-card:hover {
+    box-shadow: 0 0 20px rgba(231, 76, 60, 0.3); /* Sombra mais intensa no hover */
+}
+
+.ponto-atencao-card h3 {
+    color: #e74c3c;
+    margin-bottom: 1rem;
+}
+
+.ponto-atencao-card .cabecalho-registro {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Botão visto melhorado */
+.btn-visto {
+    background: #f8f9fa;
+    border: 1px solid #2ecc71;
+    color: #2ecc71;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-visto:hover {
+    background: #2ecc71;
+    color: white;
+}
+
+.icone-visto {
+    font-weight: bold;
+    font-size: 1.2rem;
 }
