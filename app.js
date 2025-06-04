@@ -45,34 +45,18 @@ class PlantaoManager {
             formNovoPonto: document.getElementById('form-novo-ponto'),
             inputPontoTexto: document.getElementById('input-ponto-texto'),
             // Botão flutuante principal
-            btnFlutuantePrincipal: document.getElementById('btn-flutuante-principal'),
-            floatingMenu: document.getElementById('floating-menu'),
-            btnNovoRegistro: document.getElementById('btn-novo-registro'),
-            btnNovoPonto: document.getElementById('btn-novo-ponto')
+            btnFlutuantePrincipal: document.getElementById('btn-flutuante-principal')
         };
     }
 
     initEventos() {
-        // Botão flutuante principal
+        // Botão flutuante principal com comportamento contextual
         this.elements.btnFlutuantePrincipal.addEventListener('click', () => {
-            this.elements.floatingMenu.classList.toggle('ativo');
-        });
-        
-        // Opções do menu flutuante
-        this.elements.btnNovoRegistro.addEventListener('click', () => {
-            this.abrirModal();
-            this.elements.floatingMenu.classList.remove('ativo');
-        });
-        
-        this.elements.btnNovoPonto.addEventListener('click', () => {
-            this.abrirModalNovoPonto();
-            this.elements.floatingMenu.classList.remove('ativo');
-        });
-        
-        // Fechar menu flutuante ao clicar fora
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.floating-container')) {
-                this.elements.floatingMenu.classList.remove('ativo');
+            const abaAtiva = document.querySelector('.aba.ativa').dataset.aba;
+            if (abaAtiva === 'plantao') {
+                this.abrirModal();
+            } else if (abaAtiva === 'pontos-atencao') {
+                this.abrirModalNovoPonto();
             }
         });
         
@@ -477,7 +461,7 @@ class PlantaoManager {
     carregarPontosAtencao() {
         this.elements.pontosAtencaoContainer.innerHTML = '';
         
-        // Ordenar pontos: não resolvidos primeiro (alta > média > baixa) e depois resolvidos
+        // Ordenar pontos: não resolvidos por gravidade (alta > média > baixa) e depois resolvidos
         const pontosOrdenados = [...this.plantaoAtivo.pontosAtencao].sort((a, b) => {
             // Se ambos não resolvidos, ordenar por gravidade
             if (!a.resolvido && !b.resolvido) {
@@ -506,7 +490,7 @@ class PlantaoManager {
             
             card.innerHTML = `
                 <div class="cabecalho-registro">
-                    <h3>Ponto de Atenção <span class="gravidade-tag">${ponto.gravidade.toUpperCase()}</span></h3>
+                    <h3><span class="gravidade-tag">${ponto.gravidade.toUpperCase()}</span></h3>
                     ${!ponto.resolvido ? `
                         <button class="btn-resolver">Marcar como Resolvido</button>
                     ` : ''}
