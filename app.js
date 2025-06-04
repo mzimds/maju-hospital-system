@@ -20,7 +20,6 @@ class PlantaoManager {
 
     initElements() {
         this.elements = {
-            btnNovo: document.getElementById('btn-novo'),
             btnEncerrar: document.getElementById('btn-encerrar'),
             modal: document.getElementById('modal'),
             form: document.getElementById('form'),
@@ -42,20 +41,40 @@ class PlantaoManager {
             abaPlantaoAtivo: document.getElementById('aba-plantao-ativo'),
             abaPontosAtencao: document.getElementById('aba-pontos-atencao'),
             pontosAtencaoContainer: document.getElementById('pontos-atencao-container'),
-            btnNovoPonto: document.getElementById('btn-novo-ponto'),
-            // Novos elementos
             modalNovoPonto: document.getElementById('modal-novo-ponto'),
             formNovoPonto: document.getElementById('form-novo-ponto'),
-            inputPontoTexto: document.getElementById('input-ponto-texto')
+            inputPontoTexto: document.getElementById('input-ponto-texto'),
+            // Botão flutuante principal
+            btnFlutuantePrincipal: document.getElementById('btn-flutuante-principal'),
+            floatingMenu: document.getElementById('floating-menu'),
+            btnNovoRegistro: document.getElementById('btn-novo-registro'),
+            btnNovoPonto: document.getElementById('btn-novo-ponto')
         };
     }
 
     initEventos() {
-        // Botão novo registro
-        this.elements.btnNovo.addEventListener('click', () => this.abrirModal());
+        // Botão flutuante principal
+        this.elements.btnFlutuantePrincipal.addEventListener('click', () => {
+            this.elements.floatingMenu.classList.toggle('ativo');
+        });
         
-        // Botão novo ponto de atenção
-        this.elements.btnNovoPonto.addEventListener('click', () => this.abrirModalNovoPonto());
+        // Opções do menu flutuante
+        this.elements.btnNovoRegistro.addEventListener('click', () => {
+            this.abrirModal();
+            this.elements.floatingMenu.classList.remove('ativo');
+        });
+        
+        this.elements.btnNovoPonto.addEventListener('click', () => {
+            this.abrirModalNovoPonto();
+            this.elements.floatingMenu.classList.remove('ativo');
+        });
+        
+        // Fechar menu flutuante ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.floating-container')) {
+                this.elements.floatingMenu.classList.remove('ativo');
+            }
+        });
         
         // Botão encerrar/iniciar plantão
         this.elements.btnEncerrar.addEventListener('click', () => {
@@ -163,8 +182,6 @@ class PlantaoManager {
             this.elements.btnEncerrar.style.color = '#e74c3c';
             
             this.elements.barraPesquisaPlantao.style.display = 'block';
-            this.elements.btnNovo.style.display = 'flex';
-
             this.elements.abaPlantaoAtivo.style.display = 'flex';
             this.elements.abaPontosAtencao.style.display = 'flex';
             this.mostrarAba('plantao');
@@ -176,8 +193,6 @@ class PlantaoManager {
             this.elements.btnEncerrar.style.color = '#2ecc71';
             
             this.elements.barraPesquisaPlantao.style.display = 'none';
-            this.elements.btnNovo.style.display = 'none';
-
             this.elements.abaPlantaoAtivo.style.display = 'none';
             this.elements.abaPontosAtencao.style.display = 'flex';
             this.mostrarAba('pontos-atencao');
@@ -186,7 +201,6 @@ class PlantaoManager {
 
     encerrarPlantao() {
         const relatorio = document.getElementById('relatorio-encerramento').value.trim();
-        const observacoesProximoPlantao = document.getElementById('observacoes-proximo-plantao').value.trim();
         
         this.plantaoAtivo.ativo = false;
         
@@ -205,17 +219,12 @@ class PlantaoManager {
             responsavel: "Enf. Responsável",
             registros: [...this.plantaoAtivo.registros],
             pontosAtencao: [...pontosNaoResolvidos],
-            relatorioFinal: relatorio || "Nenhum relatório fornecido",
-            observacoesProximoPlantao: observacoesProximoPlantao ? {
-                texto: observacoesProximoPlantao,
-                autor: "Enf. Responsável",
-                data: new Date().toLocaleString('pt-BR')
-            } : null
+            relatorioFinal: relatorio || "Nenhum relatório fornecido"
         };
         
         this.plantaoAtivo.historico.unshift(plantaoEncerrado);
         this.plantaoAtivo.registros = [];
-        this.plantaoAtivo.pontosAtencao = pontosNaoResolvidos; // Manter pontos não resolvidos
+        this.plantaoAtivo.pontosAtencao = pontosNaoResolvidos;
         
         this.salvarLocalStorage();
         this.atualizarInterface();
@@ -278,7 +287,6 @@ class PlantaoManager {
     fecharModalEncerrar() {
         this.elements.modalEncerrar.style.display = 'none';
         document.getElementById('relatorio-encerramento').value = '';
-        document.getElementById('observacoes-proximo-plantao').value = '';
     }
 
     fecharModal() {
@@ -293,11 +301,24 @@ class PlantaoManager {
             this.iniciarPlantao();
         }
         
+        const nomePaciente = document.getElementById('paciente').value.trim();
+        const descricao = document.getElementById('ocorrencia').value.trim();
+        
+        // Verificar duplicidade
+        const pacienteExistente = this.plantaoAtivo.registros.find(
+            registro => registro.paciente.toLowerCase() === nomePaciente.toLowerCase()
+        );
+        
+        if (pacienteExistente) {
+            alert('Já existe um registro para este paciente no plantão atual.');
+            return;
+        }
+        
         const novoRegistro = {
             id: Date.now(),
-            paciente: document.getElementById('paciente').value.trim(),
+            paciente: nomePaciente,
             historico: [{
-                texto: document.getElementById('ocorrencia').value.trim(),
+                texto: descricao,
                 data: new Date().toLocaleString('pt-BR'),
                 autor: "Enf. Responsável"
             }],
@@ -456,16 +477,21 @@ class PlantaoManager {
     carregarPontosAtencao() {
         this.elements.pontosAtencaoContainer.innerHTML = '';
         
-        // Botão para adicionar novo ponto (apenas durante plantão ativo)
-        if (this.plantaoAtivo.ativo) {
-            const btnNovoPonto = document.createElement('button');
-            btnNovoPonto.className = 'btn-novo-ponto';
-            btnNovoPonto.textContent = '+ Novo Ponto de Atenção';
-            btnNovoPonto.addEventListener('click', () => this.abrirModalNovoPonto());
-            this.elements.pontosAtencaoContainer.appendChild(btnNovoPonto);
-        }
+        // Ordenar pontos: não resolvidos primeiro (alta > média > baixa) e depois resolvidos
+        const pontosOrdenados = [...this.plantaoAtivo.pontosAtencao].sort((a, b) => {
+            // Se ambos não resolvidos, ordenar por gravidade
+            if (!a.resolvido && !b.resolvido) {
+                const prioridade = { alta: 3, media: 2, baixa: 1 };
+                return prioridade[b.gravidade] - prioridade[a.gravidade];
+            }
+            // Se um resolvido e o outro não, o não resolvido vem primeiro
+            if (a.resolvido && !b.resolvido) return 1;
+            if (!a.resolvido && b.resolvido) return -1;
+            // Se ambos resolvidos, manter ordem de criação
+            return new Date(b.dataCriacao) - new Date(a.dataCriacao);
+        });
         
-        if (this.plantaoAtivo.pontosAtencao.length === 0) {
+        if (pontosOrdenados.length === 0) {
             const semRegistros = document.createElement('div');
             semRegistros.className = 'sem-registros';
             semRegistros.textContent = 'Nenhum ponto de atenção registrado';
@@ -473,7 +499,7 @@ class PlantaoManager {
             return;
         }
         
-        this.plantaoAtivo.pontosAtencao.forEach(ponto => {
+        pontosOrdenados.forEach(ponto => {
             const card = document.createElement('div');
             card.className = `ponto-atencao-card ${ponto.gravidade} ${ponto.resolvido ? 'ponto-resolvido' : ''}`;
             card.dataset.id = ponto.id;
@@ -535,11 +561,6 @@ class PlantaoManager {
                         <div class="entrada-registro">
                             <p><strong>Relatório Final:</strong> ${plantao.relatorioFinal}</p>
                         </div>
-                        ${plantao.observacoesProximoPlantao ? `
-                        <div class="entrada-registro">
-                            <p><strong>Observações:</strong> ${plantao.observacoesProximoPlantao.texto}</p>
-                        </div>
-                        ` : ''}
                         <div class="entrada-registro">
                             <p><strong>${plantao.registros.length} registros</strong></p>
                         </div>
