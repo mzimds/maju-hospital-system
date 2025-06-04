@@ -35,19 +35,10 @@
             </div>
             
             <main class="registros" id="registros"></main>
-
-            <button class="btn-flutuante" id="btn-novo">
-                <span class="icon">+</span>
-                <span class="texto">Novo Registro</span>
-            </button>
         </div>
 
         <div class="conteudo-aba" id="aba-pontos-atencao">
             <div class="pontos-atencao" id="pontos-atencao-container"></div>
-            <button class="btn-flutuante" id="btn-novo-ponto" style="bottom: 100px;">
-                <span class="icon">+</span>
-                <span class="texto">Novo Ponto</span>
-            </button>
         </div>
 
         <div class="conteudo-aba" id="aba-historico">
@@ -58,6 +49,21 @@
                 </div>
             </div>
             <div class="historico-plantao" id="historico-plantao"></div>
+        </div>
+
+        <!-- Botão Flutuante Principal -->
+        <div class="floating-container">
+            <button class="btn-flutuante-principal" id="btn-flutuante-principal">
+                <span>+</span>
+            </button>
+            <div class="floating-menu" id="floating-menu">
+                <button class="floating-option" id="btn-novo-registro">
+                    Novo Registro
+                </button>
+                <button class="floating-option" id="btn-novo-ponto">
+                    Novo Ponto de Atenção
+                </button>
+            </div>
         </div>
 
         <!-- Modal para Novo Registro -->
@@ -124,13 +130,6 @@
                             rows="5"
                         ></textarea>
                     </div>
-                    <div class="form-group">
-                        <textarea 
-                            id="observacoes-proximo-plantao" 
-                            placeholder="Observações para o próximo plantão (opcional)..."
-                            rows="3"
-                        ></textarea>
-                    </div>
                     <div class="modal-botoes">
                         <button type="button" class="btn-cancelar" id="btn-cancelar-encerrar">Cancelar</button>
                         <button type="submit" class="btn-salvar">Confirmar Encerramento</button>
@@ -157,15 +156,15 @@
                         <div class="gravidade-opcoes">
                             <label class="gravidade-opcao">
                                 <input type="radio" name="gravidade" value="alta" required>
-                                <span>Alta</span>
+                                <span class="alta">Alta</span>
                             </label>
                             <label class="gravidade-opcao">
                                 <input type="radio" name="gravidade" value="media" checked>
-                                <span>Média</span>
+                                <span class="media">Média</span>
                             </label>
                             <label class="gravidade-opcao">
                                 <input type="radio" name="gravidade" value="baixa">
-                                <span>Baixa</span>
+                                <span class="baixa">Baixa</span>
                             </label>
                         </div>
                     </div>
