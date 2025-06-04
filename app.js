@@ -4,7 +4,8 @@ class PlantaoManager {
             ativo: JSON.parse(localStorage.getItem('plantaoAtivo')) ?? true,
             registros: JSON.parse(localStorage.getItem('registros')) || [],
             historico: JSON.parse(localStorage.getItem('historicoPlantao')) || [],
-            dataInicio: JSON.parse(localStorage.getItem('dataInicio')) || new Date().toISOString()
+            dataInicio: JSON.parse(localStorage.getItem('dataInicio')) || new Date().toISOString(),
+            pontoAtencaoVisto: JSON.parse(localStorage.getItem('pontoAtencaoVisto')) || false
         };
         
         this.registroSelecionado = null;
@@ -35,15 +36,16 @@ class PlantaoManager {
             inputBusca: document.getElementById('input-busca'),
             inputBuscaHistorico: document.getElementById('input-busca-historico'),
             sugestoesBusca: document.getElementById('sugestoes-busca'),
-            barraPesquisaPlantao: document.getElementById('barra-pesquisa-plantao')
+            barraPesquisaPlantao: document.getElementById('barra-pesquisa-plantao'),
+            abaPlantaoAtivo: document.getElementById('aba-plantao-ativo'),
+            abaPontosAtencao: document.getElementById('aba-pontos-atencao'),
+            pontosAtencaoContainer: document.getElementById('pontos-atencao-container')
         };
     }
 
     initEventos() {
-        // Botão Novo Registro
         this.elements.btnNovo.addEventListener('click', () => this.abrirModal());
         
-        // Botão Encerrar/Iniciar Plantão
         this.elements.btnEncerrar.addEventListener('click', () => {
             if (this.plantaoAtivo.ativo) {
                 this.abrirModalEncerrar();
@@ -52,7 +54,6 @@ class PlantaoManager {
             }
         });
 
-        // Troca de abas
         this.elements.abas.forEach(aba => {
             aba.addEventListener('click', () => {
                 const abaAlvo = aba.dataset.aba;
@@ -60,30 +61,25 @@ class PlantaoManager {
             });
         });
 
-        // Formulário de Novo Registro
         this.elements.form.addEventListener('submit', (e) => this.salvarRegistro(e));
         
-        // Formulário de Encerramento
         this.elements.formEncerrar.addEventListener('submit', (e) => {
             e.preventDefault();
             this.encerrarPlantao();
         });
         
-        // Fechar Modal Principal
         this.elements.modal.addEventListener('click', (e) => {
             if(e.target.classList.contains('btn-cancelar') || e.target === this.elements.modal) {
                 this.fecharModal();
             }
         });
 
-        // Fechar Modal de Encerramento
         this.elements.modalEncerrar.addEventListener('click', (e) => {
             if(e.target.classList.contains('btn-cancelar') || e.target === this.elements.modalEncerrar) {
                 this.fecharModalEncerrar();
             }
         });
 
-        // Evento para o botão "Acrescentar informação"
         this.elements.registrosContainer.addEventListener('click', (e) => {
             if (e.target.classList.contains('btn-acrescentar')) {
                 const registroId = parseInt(e.target.dataset.id);
@@ -92,22 +88,18 @@ class PlantaoManager {
             }
         });
 
-        // Eventos para o modal de acréscimo
         document.addEventListener('click', (e) => {
-            // Fechar modal de acréscimo
             if (e.target.classList.contains('btn-cancelar-acrescentar') || 
                 e.target.classList.contains('modal-acrescentar')) {
                 this.fecharModalAcrescentar();
             }
             
-            // Salvar acréscimo
             if (e.target.classList.contains('btn-salvar-acrescentar')) {
                 e.preventDefault();
                 this.salvarAcrescimo();
             }
         });
         
-        // Barra de pesquisa plantão ativo
         this.elements.inputBusca.addEventListener('input', () => {
             this.atualizarSugestoes();
             this.filtrarRegistros();
@@ -117,7 +109,6 @@ class PlantaoManager {
             this.atualizarSugestoes();
         });
         
-        // Barra de pesquisa histórico
         this.elements.inputBuscaHistorico.addEventListener('input', () => {
             this.filtrarHistorico();
         });
@@ -137,9 +128,12 @@ class PlantaoManager {
             this.elements.btnEncerrar.textContent = 'Encerrar';
             this.elements.btnEncerrar.style.color = '#e74c3c';
             
-            // Mostrar barra de pesquisa e botão flutuante
             this.elements.barraPesquisaPlantao.style.display = 'block';
             document.getElementById('btn-novo').style.display = 'flex';
+
+            this.elements.abaPlantaoAtivo.style.display = 'flex';
+            this.elements.abaPontosAtencao.style.display = 'none';
+            this.mostrarAba('plantao');
         } else {
             this.elements.statusElement.classList.remove('ativo');
             this.elements.statusElement.classList.add('inativo');
@@ -147,16 +141,21 @@ class PlantaoManager {
             this.elements.btnEncerrar.textContent = 'Iniciar';
             this.elements.btnEncerrar.style.color = '#2ecc71';
             
-            // Ocultar barra de pesquisa e botão flutuante
             this.elements.barraPesquisaPlantao.style.display = 'none';
             document.getElementById('btn-novo').style.display = 'none';
+
+            this.elements.abaPlantaoAtivo.style.display = 'none';
+            this.elements.abaPontosAtencao.style.display = 'flex';
+            this.mostrarAba('pontos-atencao');
         }
     }
 
     encerrarPlantao() {
         const relatorio = document.getElementById('relatorio-encerramento').value.trim();
+        const observacoesProximoPlantao = document.getElementById('observacoes-proximo-plantao').value.trim();
         
         this.plantaoAtivo.ativo = false;
+        this.plantaoAtivo.pontoAtencaoVisto = false;
         
         const dataTermino = new Date();
         const dataInicio = new Date(this.plantaoAtivo.dataInicio);
@@ -169,7 +168,8 @@ class PlantaoManager {
             duracao: this.calcularDuracao(dataInicio, dataTermino),
             responsavel: "Enf. Responsável",
             registros: [...this.plantaoAtivo.registros],
-            relatorioFinal: relatorio || "Nenhum relatório fornecido"
+            relatorioFinal: relatorio || "Nenhum relatório fornecido",
+            observacoesProximoPlantao: observacoesProximoPlantao || ""
         };
         
         this.plantaoAtivo.historico.unshift(plantaoEncerrado);
@@ -203,6 +203,7 @@ class PlantaoManager {
         localStorage.setItem('registros', JSON.stringify(this.plantaoAtivo.registros));
         localStorage.setItem('historicoPlantao', JSON.stringify(this.plantaoAtivo.historico));
         localStorage.setItem('dataInicio', JSON.stringify(this.plantaoAtivo.dataInicio));
+        localStorage.setItem('pontoAtencaoVisto', JSON.stringify(this.plantaoAtivo.pontoAtencaoVisto));
     }
 
     abrirModal() {
@@ -226,12 +227,12 @@ class PlantaoManager {
     fecharModalEncerrar() {
         this.elements.modalEncerrar.style.display = 'none';
         document.getElementById('relatorio-encerramento').value = '';
+        document.getElementById('observacoes-proximo-plantao').value = '';
     }
 
     salvarRegistro(e) {
         e.preventDefault();
         
-        // Inicia plantão apenas ao salvar registro
         if (!this.plantaoAtivo.ativo) {
             this.iniciarPlantao();
         }
@@ -257,7 +258,7 @@ class PlantaoManager {
         const texto = document.getElementById('input-acrescentar').value.trim();
         
         if (texto && this.registroSelecionado) {
-            this.registroSelecionado.historico.push({
+            this.registroSelecionado.historico.unshift({
                 texto,
                 data: new Date().toLocaleString('pt-BR'),
                 autor: "Enf. Responsável"
@@ -298,7 +299,6 @@ class PlantaoManager {
             item.className = 'sugestao-item';
             item.textContent = sugestao;
             
-            // Destacar o termo buscado
             const termoIndex = sugestao.toLowerCase().indexOf(termo);
             if (termoIndex !== -1) {
                 const antes = sugestao.substring(0, termoIndex);
@@ -327,7 +327,8 @@ class PlantaoManager {
         
         document.querySelectorAll('.registro-card').forEach(card => {
             const nomePaciente = card.querySelector('h3').textContent.toLowerCase();
-            if (termo === '' || nomePaciente.includes(termo)) {
+            const conteudo = card.textContent.toLowerCase();
+            if (termo === '' || nomePaciente.includes(termo) || conteudo.includes(termo)) {
                 card.style.display = 'block';
             } else {
                 card.style.display = 'none';
@@ -345,30 +346,72 @@ class PlantaoManager {
     }
 
     mostrarAba(abaNome) {
-        // Atualizar abas
         this.elements.abas.forEach(aba => {
             aba.classList.toggle('ativa', aba.dataset.aba === abaNome);
         });
         
-        // Atualizar conteúdo das abas
         this.elements.conteudoAbas.forEach(aba => {
             aba.classList.toggle('ativa', aba.id === `aba-${abaNome}`);
         });
         
-        // Se for a aba de histórico, carregar os dados
         if (abaNome === 'historico') {
             this.carregarHistoricoPlantao();
+        } else if (abaNome === 'pontos-atencao') {
+            this.carregarPontosAtencao();
+        }
+    }
+
+    carregarPontosAtencao() {
+        if (this.plantaoAtivo.pontoAtencaoVisto) {
+            this.elements.pontosAtencaoContainer.innerHTML = '<p>Nenhum ponto de atenção pendente.</p>';
+            return;
+        }
+
+        // Busca o plantão anterior com observações
+        const plantaoAnterior = this.plantaoAtivo.historico
+            .find(plantao => plantao.observacoesProximoPlantao);
+        
+        if (plantaoAnterior && plantaoAnterior.observacoesProximoPlantao) {
+            this.elements.pontosAtencaoContainer.innerHTML = `
+                <div class="ponto-atencao-card">
+                    <div class="cabecalho-registro">
+                        <h3>Ponto de Atenção</h3>
+                        <button class="btn-visto">
+                            <span class="icone-visto">✓</span>
+                            Marcar como visto
+                        </button>
+                    </div>
+                    <p>${plantaoAnterior.observacoesProximoPlantao}</p>
+                </div>
+            `;
+
+            this.elements.pontosAtencaoContainer.querySelector('.btn-visto').addEventListener('click', () => {
+                this.plantaoAtivo.pontoAtencaoVisto = true;
+                this.salvarLocalStorage();
+                this.carregarPontosAtencao();
+            });
+        } else {
+            this.elements.pontosAtencaoContainer.innerHTML = '<p>Nenhum ponto de atenção foi registrado no plantão anterior.</p>';
         }
     }
 
     carregarHistoricoPlantao() {
+        const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+
         this.elements.historicoContainer.innerHTML = this.plantaoAtivo.historico.length > 0 
-            ? this.plantaoAtivo.historico.map(plantao => `
+            ? this.plantaoAtivo.historico.map(plantao => {
+                const inicioDate = new Date(plantao.inicio);
+                const terminoDate = new Date(plantao.termino);
+                const diaSemanaInicio = diasSemana[inicioDate.getDay()];
+                const diaSemanaTermino = diasSemana[terminoDate.getDay()];
+
+                return `
                 <div class="plantao-card">
                     <div class="plantao-info">
                         <div>
-                            <div class="plantao-resumo">Plantão encerrado</div>
-                            <div class="plantao-data">${new Date(plantao.inicio).toLocaleString('pt-BR')} - ${new Date(plantao.termino).toLocaleString('pt-BR')}</div>
+                            <div class="plantao-resumo">Plantão encerrado em ${inicioDate.toLocaleDateString('pt-BR')} (${diaSemanaInicio})</div>
+                            <div class="plantao-data">Início: ${inicioDate.toLocaleString('pt-BR')}</div>
+                            <div class="plantao-data">Término: ${terminoDate.toLocaleString('pt-BR')}</div>
                             <div class="plantao-data">Duração: ${plantao.duracao}</div>
                         </div>
                         <div>${plantao.registros.length} registros</div>
@@ -376,7 +419,10 @@ class PlantaoManager {
                     <div class="plantao-detalhes">
                         <h3>Relatório Final:</h3>
                         <p>${plantao.relatorioFinal}</p>
-                        
+                        ${plantao.observacoesProximoPlantao ? `
+                        <h3>Observações para o próximo plantão:</h3>
+                        <p>${plantao.observacoesProximoPlantao}</p>
+                        ` : ''}
                         <h3>Registros:</h3>
                         <div class="plantao-registros">
                             ${plantao.registros.slice(0, 3).map(registro => `
@@ -388,10 +434,9 @@ class PlantaoManager {
                         </div>
                     </div>
                 </div>
-            `).join('')
+            `}).join('')
             : '<div class="sem-registros">Nenhum plantão encerrado encontrado</div>';
         
-        // Adicionar eventos para expandir os detalhes
         document.querySelectorAll('.plantao-card').forEach(card => {
             card.addEventListener('click', () => {
                 card.classList.toggle('expandido');
@@ -402,7 +447,6 @@ class PlantaoManager {
     atualizarInterface() {
         this.elements.registrosContainer.innerHTML = this.plantaoAtivo.registros.length > 0 
             ? this.plantaoAtivo.registros.map(registro => {
-                // Mostrar apenas as 3 últimas entradas por padrão
                 const entradasVisiveis = registro.mostrarTodas 
                     ? registro.historico 
                     : registro.historico.slice(0, 3);
@@ -437,7 +481,6 @@ class PlantaoManager {
             }).join('')
             : '<div class="sem-registros">Nenhum registro encontrado</div>';
         
-        // Adiciona eventos aos botões de expandir
         document.querySelectorAll('.btn-expandir').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const registroId = parseInt(e.target.dataset.id);
@@ -451,7 +494,6 @@ class PlantaoManager {
             });
         });
         
-        // Aplicar filtro se houver texto na busca
         this.filtrarRegistros();
     }
 
@@ -468,7 +510,6 @@ class PlantaoManager {
     }
 }
 
-// Inicialização após o DOM estar pronto
 document.addEventListener('DOMContentLoaded', () => {
     const plantao = new PlantaoManager();
 });
