@@ -6,11 +6,11 @@ class PlantaoManager {
             registros: JSON.parse(localStorage.getItem('registros')) || [],
             historico: JSON.parse(localStorage.getItem('historicoPlantao')) || [],
             dataInicio: JSON.parse(localStorage.getItem('dataInicio')) || new Date().toISOString(),
-            pontosAtencao: JSON.parse(localStorage.getItem('pontosAtencao')) || []
+            passagens: JSON.parse(localStorage.getItem('passagens')) || []
         };
 
         this.registroSelecionado = null;
-        this.pontoSelecionado = null;
+        this.passagemSelecionada = null;
         this.initElements();
         this.initEventos();
         this.atualizarInterface();
@@ -36,16 +36,21 @@ class PlantaoManager {
             conteudoAbas: document.querySelectorAll('.conteudo-aba'),
             inputBusca: document.getElementById('input-busca'),
             inputBuscaHistorico: document.getElementById('input-busca-historico'),
+            inputBuscaPassagens: document.getElementById('input-busca-passagens'),
             sugestoesBusca: document.getElementById('sugestoes-busca'),
             barraPesquisaPlantao: document.getElementById('barra-pesquisa-plantao'),
             abaPlantaoAtivo: document.getElementById('aba-plantao-ativo'),
-            abaPontosAtencao: document.getElementById('aba-pontos-atencao'),
-            pontosAtencaoContainer: document.getElementById('pontos-atencao-container'),
-            modalNovoPonto: document.getElementById('modal-novo-ponto'),
-            formNovoPonto: document.getElementById('form-novo-ponto'),
-            inputPontoTexto: document.getElementById('input-ponto-texto'),
-            // Botão flutuante principal
-            btnFlutuantePrincipal: document.getElementById('btn-flutuante-principal')
+            abaPassagens: document.getElementById('aba-passagens'),
+            passagensContainer: document.getElementById('passagens-container'),
+            contadorPassagens: document.getElementById('contador-passagens'),
+            modalNovaPassagem: document.getElementById('modal-nova-passagem'),
+            formNovaPassagem: document.getElementById('form-nova-passagem'),
+            inputPassagemTexto: document.getElementById('input-passagem-texto'),
+            modalEditarPassagem: document.getElementById('modal-editar-passagem'),
+            formEditarPassagem: document.getElementById('form-editar-passagem'),
+            inputEditarPassagemTexto: document.getElementById('input-editar-passagem-texto'),
+            btnFlutuantePrincipal: document.getElementById('btn-flutuante-principal'),
+            floatingContainer: document.getElementById('floating-container')
         };
     }
 
@@ -55,8 +60,8 @@ class PlantaoManager {
             const abaAtiva = document.querySelector('.aba.ativa').dataset.aba;
             if (abaAtiva === 'plantao') {
                 this.abrirModal();
-            } else if (abaAtiva === 'pontos-atencao') {
-                this.abrirModalNovoPonto();
+            } else if (abaAtiva === 'passagens') {
+                this.abrirModalNovaPassagem();
             }
         });
         
@@ -74,6 +79,7 @@ class PlantaoManager {
             aba.addEventListener('click', () => {
                 const abaAlvo = aba.dataset.aba;
                 this.mostrarAba(abaAlvo);
+                this.configurarBotaoFlutuante();
             });
         });
 
@@ -86,10 +92,16 @@ class PlantaoManager {
             this.encerrarPlantao();
         });
         
-        // Formulário de novo ponto
-        this.elements.formNovoPonto.addEventListener('submit', (e) => {
+        // Formulário de nova pendência
+        this.elements.formNovaPassagem.addEventListener('submit', (e) => {
             e.preventDefault();
-            this.salvarNovoPonto();
+            this.salvarNovaPassagem();
+        });
+        
+        // Formulário de editar pendência
+        this.elements.formEditarPassagem.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.salvarEdicaoPassagem();
         });
         
         // Fechar modais
@@ -105,10 +117,17 @@ class PlantaoManager {
             }
         });
 
-        this.elements.modalNovoPonto.addEventListener('click', (e) => {
-            if(e.target.classList.contains('btn-cancelar-novo-ponto') || 
-               e.target === this.elements.modalNovoPonto) {
-                this.fecharModalNovoPonto();
+        this.elements.modalNovaPassagem.addEventListener('click', (e) => {
+            if(e.target.classList.contains('btn-cancelar-nova-passagem') || 
+               e.target === this.elements.modalNovaPassagem) {
+                this.fecharModalNovaPassagem();
+            }
+        });
+
+        this.elements.modalEditarPassagem.addEventListener('click', (e) => {
+            if(e.target.classList.contains('btn-cancelar-editar-passagem') || 
+               e.target === this.elements.modalEditarPassagem) {
+                this.fecharModalEditarPassagem();
             }
         });
 
@@ -149,6 +168,11 @@ class PlantaoManager {
             this.filtrarHistorico();
         });
         
+        // Barra de busca de pendências
+        this.elements.inputBuscaPassagens.addEventListener('input', () => {
+            this.filtrarPassagens();
+        });
+        
         // Fechar sugestões ao clicar fora
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.pesquisa-container')) {
@@ -157,17 +181,29 @@ class PlantaoManager {
         });
     }
 
+    configurarBotaoFlutuante() {
+        const abaAtiva = document.querySelector('.aba.ativa').dataset.aba;
+        const container = this.elements.floatingContainer;
+        
+        // O botão não deve aparecer na aba de histórico
+        if (abaAtiva === 'historico') {
+            container.style.display = 'none';
+        } else {
+            container.style.display = 'block';
+        }
+    }
+
     atualizarStatusPlantao() {
         if(this.plantaoAtivo.ativo) {
             this.elements.statusElement.classList.remove('inativo');
             this.elements.statusElement.classList.add('ativo');
-            this.elements.statusTexto.textContent = 'Plantão Ativo';
+            this.elements.statusTexto.textContent = 'Plantão Atual';
             this.elements.btnEncerrar.textContent = 'Encerrar';
             this.elements.btnEncerrar.style.color = '#e74c3c';
             
             this.elements.barraPesquisaPlantao.style.display = 'block';
             this.elements.abaPlantaoAtivo.style.display = 'flex';
-            this.elements.abaPontosAtencao.style.display = 'flex';
+            this.elements.abaPassagens.style.display = 'flex';
             this.mostrarAba('plantao');
         } else {
             this.elements.statusElement.classList.remove('ativo');
@@ -178,9 +214,17 @@ class PlantaoManager {
             
             this.elements.barraPesquisaPlantao.style.display = 'none';
             this.elements.abaPlantaoAtivo.style.display = 'none';
-            this.elements.abaPontosAtencao.style.display = 'flex';
-            this.mostrarAba('pontos-atencao');
+            this.elements.abaPassagens.style.display = 'flex';
+            this.mostrarAba('passagens');
         }
+        this.configurarBotaoFlutuante();
+        this.atualizarContadorPassagens();
+    }
+
+    atualizarContadorPassagens() {
+        const emAberto = this.plantaoAtivo.passagens.filter(p => !p.resolvido).length;
+        this.elements.contadorPassagens.textContent = emAberto;
+        this.elements.contadorPassagens.style.display = emAberto > 0 ? 'inline' : 'none';
     }
 
     encerrarPlantao() {
@@ -191,8 +235,8 @@ class PlantaoManager {
         const dataTermino = new Date();
         const dataInicio = new Date(this.plantaoAtivo.dataInicio);
         
-        // Filtrar pontos não resolvidos para transferir
-        const pontosNaoResolvidos = this.plantaoAtivo.pontosAtencao.filter(p => !p.resolvido);
+        // Filtrar pendências não resolvidas para transferir
+        const passagensNaoResolvidas = this.plantaoAtivo.passagens.filter(p => !p.resolvido);
         
         const plantaoEncerrado = {
             id: `plantao-${Date.now()}`,
@@ -202,13 +246,13 @@ class PlantaoManager {
             duracao: this.calcularDuracao(dataInicio, dataTermino),
             responsavel: "Enf. Responsável",
             registros: [...this.plantaoAtivo.registros],
-            pontosAtencao: [...pontosNaoResolvidos],
+            passagens: [...passagensNaoResolvidas],
             relatorioFinal: relatorio || "Nenhum relatório fornecido"
         };
         
         this.plantaoAtivo.historico.unshift(plantaoEncerrado);
         this.plantaoAtivo.registros = [];
-        this.plantaoAtivo.pontosAtencao = pontosNaoResolvidos;
+        this.plantaoAtivo.passagens = passagensNaoResolvidas;
         
         this.salvarLocalStorage();
         this.atualizarInterface();
@@ -238,20 +282,38 @@ class PlantaoManager {
         localStorage.setItem('registros', JSON.stringify(this.plantaoAtivo.registros));
         localStorage.setItem('historicoPlantao', JSON.stringify(this.plantaoAtivo.historico));
         localStorage.setItem('dataInicio', JSON.stringify(this.plantaoAtivo.dataInicio));
-        localStorage.setItem('pontosAtencao', JSON.stringify(this.plantaoAtivo.pontosAtencao));
+        localStorage.setItem('passagens', JSON.stringify(this.plantaoAtivo.passagens));
     }
 
     abrirModal() {
         this.elements.modal.style.display = 'flex';
     }
     
-    abrirModalNovoPonto() {
-        this.elements.modalNovoPonto.style.display = 'flex';
+    abrirModalNovaPassagem() {
+        this.elements.modalNovaPassagem.style.display = 'flex';
     }
     
-    fecharModalNovoPonto() {
-        this.elements.modalNovoPonto.style.display = 'none';
-        this.elements.formNovoPonto.reset();
+    fecharModalNovaPassagem() {
+        this.elements.modalNovaPassagem.style.display = 'none';
+        this.elements.formNovaPassagem.reset();
+    }
+    
+    abrirEditarPassagem(passagem) {
+        this.passagemSelecionada = passagem;
+        this.elements.inputEditarPassagemTexto.value = passagem.texto;
+        
+        // Marcar o radio correto
+        document.querySelectorAll('input[name="gravidade-editar"]').forEach(radio => {
+            if (radio.value === passagem.gravidade) {
+                radio.checked = true;
+            }
+        });
+        
+        this.elements.modalEditarPassagem.style.display = 'flex';
+    }
+    
+    fecharModalEditarPassagem() {
+        this.elements.modalEditarPassagem.style.display = 'none';
     }
 
     abrirModalAcrescentar() {
@@ -316,26 +378,41 @@ class PlantaoManager {
         this.atualizarInterface();
     }
 
-    salvarNovoPonto() {
-        const texto = this.elements.inputPontoTexto.value.trim();
+    salvarNovaPassagem() {
+        const texto = this.elements.inputPassagemTexto.value.trim();
         if (!texto) return;
         
         const gravidade = document.querySelector('input[name="gravidade"]:checked').value;
         
-        const novoPonto = {
+        const novaPassagem = {
             id: `pa-${Date.now()}`,
             texto,
             criadoPor: "Enf. Responsável",
             dataCriacao: new Date().toISOString(),
             resolvido: false,
             dataResolucao: null,
+            resolvidoPor: null,
             gravidade
         };
         
-        this.plantaoAtivo.pontosAtencao.unshift(novoPonto);
+        this.plantaoAtivo.passagens.unshift(novaPassagem);
         this.salvarLocalStorage();
-        this.fecharModalNovoPonto();
-        this.carregarPontosAtencao();
+        this.fecharModalNovaPassagem();
+        this.carregarPassagens();
+    }
+
+    salvarEdicaoPassagem() {
+        const texto = this.elements.inputEditarPassagemTexto.value.trim();
+        if (!texto || !this.passagemSelecionada) return;
+        
+        const gravidade = document.querySelector('input[name="gravidade-editar"]:checked').value;
+        
+        this.passagemSelecionada.texto = texto;
+        this.passagemSelecionada.gravidade = gravidade;
+        
+        this.salvarLocalStorage();
+        this.fecharModalEditarPassagem();
+        this.carregarPassagens();
     }
 
     salvarAcrescimo() {
@@ -357,13 +434,14 @@ class PlantaoManager {
         }
     }
 
-    resolverPontoAtencao(id) {
-        const ponto = this.plantaoAtivo.pontosAtencao.find(p => p.id === id);
-        if (ponto) {
-            ponto.resolvido = true;
-            ponto.dataResolucao = new Date().toISOString();
+    resolverPassagem(id) {
+        const passagem = this.plantaoAtivo.passagens.find(p => p.id === id);
+        if (passagem) {
+            passagem.resolvido = true;
+            passagem.dataResolucao = new Date().toISOString();
+            passagem.resolvidoPor = "Enf. Responsável";
             this.salvarLocalStorage();
-            this.carregarPontosAtencao();
+            this.carregarPassagens();
         }
     }
 
@@ -442,6 +520,15 @@ class PlantaoManager {
         });
     }
 
+    filtrarPassagens() {
+        const termo = this.elements.inputBuscaPassagens.value.toLowerCase().trim();
+        
+        document.querySelectorAll('.passagem-card').forEach(card => {
+            const conteudo = card.textContent.toLowerCase();
+            card.style.display = conteudo.includes(termo) ? 'block' : 'none';
+        });
+    }
+
     mostrarAba(abaNome) {
         this.elements.abas.forEach(aba => {
             aba.classList.toggle('ativa', aba.dataset.aba === abaNome);
@@ -453,16 +540,18 @@ class PlantaoManager {
         
         if (abaNome === 'historico') {
             this.carregarHistoricoPlantao();
-        } else if (abaNome === 'pontos-atencao') {
-            this.carregarPontosAtencao();
+        } else if (abaNome === 'passagens') {
+            this.carregarPassagens();
         }
+        this.configurarBotaoFlutuante();
     }
 
-    carregarPontosAtencao() {
-        this.elements.pontosAtencaoContainer.innerHTML = '';
+    carregarPassagens() {
+        this.elements.passagensContainer.innerHTML = '';
+        this.atualizarContadorPassagens();
         
-        // Ordenar pontos: não resolvidos por gravidade (alta > média > baixa) e depois resolvidos
-        const pontosOrdenados = [...this.plantaoAtivo.pontosAtencao].sort((a, b) => {
+        // Ordenar pendências: não resolvidas por gravidade (alta > média > baixa) e depois resolvidas
+        const passagensOrdenadas = [...this.plantaoAtivo.passagens].sort((a, b) => {
             // Se ambos não resolvidos, ordenar por gravidade
             if (!a.resolvido && !b.resolvido) {
                 const prioridade = { alta: 3, media: 2, baixa: 1 };
@@ -475,50 +564,61 @@ class PlantaoManager {
             return new Date(b.dataCriacao) - new Date(a.dataCriacao);
         });
         
-        if (pontosOrdenados.length === 0) {
+        if (passagensOrdenadas.length === 0) {
             const semRegistros = document.createElement('div');
             semRegistros.className = 'sem-registros';
-            semRegistros.textContent = 'Nenhum ponto de atenção registrado';
-            this.elements.pontosAtencaoContainer.appendChild(semRegistros);
+            semRegistros.textContent = 'Nenhuma pendência registrada';
+            this.elements.passagensContainer.appendChild(semRegistros);
             return;
         }
         
-        pontosOrdenados.forEach(ponto => {
+        passagensOrdenadas.forEach(passagem => {
             const card = document.createElement('div');
-            card.className = `ponto-atencao-card ${ponto.gravidade} ${ponto.resolvido ? 'ponto-resolvido' : ''}`;
-            card.dataset.id = ponto.id;
+            card.className = `passagem-card ${passagem.gravidade} ${passagem.resolvido ? 'passagem-resolvida' : ''}`;
+            card.dataset.id = passagem.id;
             
             card.innerHTML = `
                 <div class="cabecalho-registro">
-                    <h3><span class="gravidade-tag">${ponto.gravidade.toUpperCase()}</span></h3>
-                    ${!ponto.resolvido ? `
-                        <button class="btn-resolver">Marcar como Resolvido</button>
-                    ` : ''}
+                    <h3><span class="gravidade-tag">${passagem.gravidade.toUpperCase()}</span></h3>
+                    <div>
+                        ${!passagem.resolvido ? `
+                            <button class="btn-editar">Editar</button>
+                            <button class="btn-resolver">Marcar como Resolvido</button>
+                        ` : ''}
+                    </div>
                 </div>
                 <div class="historico-registro">
                     <div class="entrada-registro">
-                        <p>${ponto.texto}</p>
-                        <small>Criado por: ${ponto.criadoPor} - ${new Date(ponto.dataCriacao).toLocaleString('pt-BR')}</small>
+                        <p>${passagem.texto}</p>
+                        <small>Criado por: ${passagem.criadoPor} - ${new Date(passagem.dataCriacao).toLocaleString('pt-BR')}</small>
                     </div>
-                    ${ponto.resolvido ? `
+                    ${passagem.resolvido ? `
                         <div class="entrada-registro">
                             <p><strong>RESOLVIDO</strong></p>
-                            <small>Resolvido em: ${new Date(ponto.dataResolucao).toLocaleString('pt-BR')}</small>
+                            <small>Resolvido por: ${passagem.resolvidoPor} - ${new Date(passagem.dataResolucao).toLocaleString('pt-BR')}</small>
                         </div>
                     ` : ''}
                 </div>
             `;
             
-            this.elements.pontosAtencaoContainer.appendChild(card);
+            this.elements.passagensContainer.appendChild(card);
             
             // Evento para marcar como resolvido
-            if (!ponto.resolvido) {
+            if (!passagem.resolvido) {
                 const btnResolver = card.querySelector('.btn-resolver');
                 btnResolver.addEventListener('click', () => {
-                    this.resolverPontoAtencao(ponto.id);
+                    this.resolverPassagem(passagem.id);
+                });
+                
+                const btnEditar = card.querySelector('.btn-editar');
+                btnEditar.addEventListener('click', () => {
+                    this.abrirEditarPassagem(passagem);
                 });
             }
         });
+        
+        // Aplicar filtro atual
+        this.filtrarPassagens();
     }
 
     carregarHistoricoPlantao() {
@@ -528,30 +628,68 @@ class PlantaoManager {
             ? this.plantaoAtivo.historico.map(plantao => {
                 const inicioDate = new Date(plantao.inicio);
                 const terminoDate = new Date(plantao.termino);
-                const diaSemanaInicio = diasSemana[inicioDate.getDay()];
+                const diaSemana = diasSemana[inicioDate.getDay()];
+                const dataFormatada = inicioDate.toLocaleDateString('pt-BR');
                 
                 return `
-                <div class="plantao-card">
+                <div class="plantao-card" data-id="${plantao.id}">
                     <div class="cabecalho-registro">
-                        <h3>Plantão ${inicioDate.toLocaleDateString('pt-BR')}</h3>
+                        <h3>${diaSemana}, ${dataFormatada}</h3>
                         <div>${plantao.duracao}</div>
                     </div>
-                    <div class="historico-registro">
+                    <div class="plantao-detalhes">
                         <div class="entrada-registro">
-                            <p><strong>${diaSemanaInicio}</strong></p>
-                            <small>Início: ${inicioDate.toLocaleString('pt-BR')}</small>
-                            <small>Término: ${terminoDate.toLocaleString('pt-BR')}</small>
+                            <p><strong>Período:</strong> ${inicioDate.toLocaleString('pt-BR')} - ${terminoDate.toLocaleString('pt-BR')}</p>
+                        </div>
+                        <div class="entrada-registro">
+                            <p><strong>Responsável:</strong> ${plantao.responsavel}</p>
                         </div>
                         <div class="entrada-registro">
                             <p><strong>Relatório Final:</strong> ${plantao.relatorioFinal}</p>
                         </div>
                         <div class="entrada-registro">
-                            <p><strong>${plantao.registros.length} registros</strong></p>
+                            <p><strong>Registros:</strong> ${plantao.registros.length}</p>
                         </div>
+                        ${plantao.passagens.length > 0 ? `
+                        <div class="entrada-registro">
+                            <p><strong>Pendências Pendentes:</strong> ${plantao.passagens.length}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="ocorrencias-expandidas" style="display: none;">
+                        ${plantao.registros.map(registro => `
+                            <div class="ocorrencia-item">
+                                <p><strong>${registro.paciente}</strong></p>
+                                ${registro.historico.map(entry => `
+                                    <p>${entry.texto}</p>
+                                    <small>${entry.autor} - ${entry.data}</small>
+                                `).join('')}
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
-            `}).join('')
+            `;
+            }).join('')
             : '<div class="sem-registros">Nenhum plantão encerrado encontrado</div>';
+        
+        // Adicionar evento de clique para expandir/detalhar
+        document.querySelectorAll('.plantao-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                // Evitar expandir ao clicar em links dentro do card
+                if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
+                
+                const ocorrencias = card.querySelector('.ocorrencias-expandidas');
+                if (ocorrencias) {
+                    if (ocorrencias.style.display === 'none') {
+                        ocorrencias.style.display = 'block';
+                        card.classList.add('expandido');
+                    } else {
+                        ocorrencias.style.display = 'none';
+                        card.classList.remove('expandido');
+                    }
+                }
+            });
+        });
     }
 
     atualizarInterface() {
@@ -610,7 +748,7 @@ class PlantaoManager {
         });
         
         this.filtrarRegistros();
-        this.carregarPontosAtencao();
+        this.carregarPassagens();
     }
 
     atualizarHorario() {
