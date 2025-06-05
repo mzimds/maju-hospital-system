@@ -451,7 +451,7 @@ header {
     position: fixed;
     bottom: 1.5rem;
     left: 50%;
-    transform: translateX(-50%);
+    /*transform: translateX(-50%);*/
     z-index: 900;
 }
 
@@ -480,9 +480,9 @@ header {
     padding-bottom: 4px;
 }
 
-/* Efeito mais suave no clique */
+/* Correção do movimento do botão flutuante */
 .btn-flutuante-principal:active {
-    transform: translateX(-50%) scale(0.95);
+    transform: /*translateX(-50%)*/ scale(0.95);
 }
 
 /* Barras de pesquisa */
@@ -565,8 +565,20 @@ header {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.plantao-detalhes {
+.resumo-plantao {
     padding: 0 1rem 1rem;
+    display: flex;
+    gap: 1rem;
+    color: var(--text-light);
+}
+
+.duracao-plantao {
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.plantao-detalhes {
+    padding: 0 1rem;
 }
 
 .plantao-detalhes .entrada-registro {
@@ -578,6 +590,10 @@ header {
     background-color: #f9fafb;
     border-top: 1px solid var(--border);
     margin-top: 0.5rem;
+}
+
+.historico-registros {
+    margin-top: 1rem;
 }
 
 .ocorrencia-item {
