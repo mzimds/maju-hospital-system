@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maju - Hospital System</title>
+    <title>Maju - Healthcare Shift Transition Platform</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
             <div class="setor-info">
                 <h1>UTI-01</h1>
                 <div class="status ativo">
-                    <span id="status-texto">Plantão Ativo</span>
+                    <span id="status-texto">Plantão Atual</span>
                     <small id="horario-inicio"></small>
                 </div>
             </div> 
@@ -20,8 +20,10 @@
         </header>
 
         <div class="abas">
-            <div class="aba ativa" data-aba="plantao" id="aba-plantao-ativo">Plantão Ativo</div>
-            <div class="aba" data-aba="pontos-atencao" id="aba-pontos-atencao">Pontos de Atenção</div>
+            <div class="aba ativa" data-aba="plantao" id="aba-plantao-ativo">Plantão Atual</div>
+            <div class="aba" data-aba="passagens" id="aba-passagens">
+                Pendências <span id="contador-passagens" class="contador">0</span>
+            </div>
             <div class="aba" data-aba="historico" id="aba-historico">Histórico</div>
         </div>
 
@@ -37,8 +39,14 @@
             <main class="registros" id="registros"></main>
         </div>
 
-        <div class="conteudo-aba" id="aba-pontos-atencao">
-            <div class="pontos-atencao" id="pontos-atencao-container"></div>
+        <div class="conteudo-aba" id="aba-passagens">
+            <div class="barra-pesquisa">
+                <div class="pesquisa-container">
+                    <input type="text" id="input-busca-passagens" placeholder="Buscar em pendências...">
+                    <span class="icone-busca"></span>
+                </div>
+            </div>
+            <div class="passagens" id="passagens-container"></div>
         </div>
 
         <div class="conteudo-aba" id="aba-historico">
@@ -52,7 +60,7 @@
         </div>
 
         <!-- Botão Flutuante Principal -->
-        <div class="floating-container">
+        <div class="floating-container" id="floating-container">
             <button class="btn-flutuante-principal" id="btn-flutuante-principal">
                 <span>+</span>
             </button>
@@ -130,15 +138,15 @@
             </div>
         </div>
         
-        <!-- Modal para Novo Ponto de Atenção -->
-        <div class="modal" id="modal-novo-ponto">
+        <!-- Modal para Nova Pendência -->
+        <div class="modal" id="modal-nova-passagem">
             <div class="modal-content">
-                <h2>Novo Ponto de Atenção</h2>
-                <form id="form-novo-ponto">
+                <h2>Nova Pendência</h2>
+                <form id="form-nova-passagem">
                     <div class="form-group">
                         <textarea 
-                            id="input-ponto-texto" 
-                            placeholder="Descreva o ponto de atenção..." 
+                            id="input-passagem-texto" 
+                            placeholder="Descreva a nova pendência..." 
                             rows="4"
                             required
                         ></textarea>
@@ -161,7 +169,45 @@
                         </div>
                     </div>
                     <div class="modal-botoes">
-                        <button type="button" class="btn-cancelar btn-cancelar-novo-ponto">Cancelar</button>
+                        <button type="button" class="btn-cancelar btn-cancelar-nova-passagem">Cancelar</button>
+                        <button type="submit" class="btn-salvar">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal para Editar Pendência -->
+        <div class="modal" id="modal-editar-passagem">
+            <div class="modal-content">
+                <h2>Editar Pendência</h2>
+                <form id="form-editar-passagem">
+                    <div class="form-group">
+                        <textarea 
+                            id="input-editar-passagem-texto" 
+                            placeholder="Descreva a pendência..." 
+                            rows="4"
+                            required
+                        ></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Gravidade:</label>
+                        <div class="gravidade-opcoes">
+                            <label class="gravidade-opcao">
+                                <input type="radio" name="gravidade-editar" value="alta" required>
+                                <span class="alta">Alta</span>
+                            </label>
+                            <label class="gravidade-opcao">
+                                <input type="radio" name="gravidade-editar" value="media">
+                                <span class="media">Média</span>
+                            </label>
+                            <label class="gravidade-opcao">
+                                <input type="radio" name="gravidade-editar" value="baixa">
+                                <span class="baixa">Baixa</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-botoes">
+                        <button type="button" class="btn-cancelar btn-cancelar-editar-passagem">Cancelar</button>
                         <button type="submit" class="btn-salvar">Salvar</button>
                     </div>
                 </form>
