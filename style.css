@@ -55,6 +55,12 @@ header {
     font-weight: 500;
 }
 
+.info-turno {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-top: 0.2rem;
+}
+
 .status {
     display: flex;
     align-items: center;
@@ -112,6 +118,9 @@ header {
     transition: all 0.2s;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .aba.ativa {
@@ -480,7 +489,6 @@ header {
     padding-bottom: 4px;
 }
 
-/* Correção do movimento do botão flutuante */
 .btn-flutuante-principal:active {
     transform: translateX(-50%) scale(0.95);
 }
@@ -612,6 +620,56 @@ header {
 .ocorrencia-item small {
     color: var(--text-light);
     font-size: 0.82rem;
+}
+
+.historico-passagens {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border);
+}
+
+.passagem-item {
+    background: rgba(0, 0, 0, 0.02);
+    padding: 0.8rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid;
+}
+
+.passagem-item.alta { 
+    border-left-color: var(--danger); 
+}
+
+.passagem-item.media { 
+    border-left-color: var(--warning); 
+}
+
+.passagem-item.baixa { 
+    border-left-color: var(--success); 
+}
+
+/* ===== DASHBOARD DE TRANSIÇÃO ===== */
+.dashboard-transicao {
+    display: flex;
+    justify-content: space-around;
+    padding: 2rem;
+    text-align: center;
+}
+
+.dash-item {
+    flex: 1;
+}
+
+.dash-valor {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.dash-label {
+    font-size: 1rem;
+    color: var(--text-light);
+    margin-top: 0.5rem;
 }
 
 /* Responsividade */
