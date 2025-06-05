@@ -16,6 +16,8 @@ class PlantaoManager {
         this.atualizarInterface();
         this.atualizarHorario();
         this.atualizarStatusPlantao();
+        this.verificarAtividadeSemPlantao();
+        this.agendarConfirmacaoPosJornada();
     }
 
     initElements() {
@@ -227,6 +229,59 @@ class PlantaoManager {
         this.elements.contadorPassagens.style.display = emAberto > 0 ? 'inline' : 'none';
     }
 
+    abrirModalEncerrar() {
+        const temPendenciasAbertas = this.plantaoAtivo.passagens.some(p => !p.resolvido);
+        const temRegistrosCriticos = this.plantaoAtivo.registros.some(r => 
+            r.historico.some(entry => 
+                entry.texto.toLowerCase().includes('crítico') || 
+                entry.texto.toLowerCase().includes('emergência')
+            )
+        );
+        
+        if (!temPendenciasAbertas && !temRegistrosCriticos) {
+            if (confirm('Plantão tranquilo. Deseja encerrar sem relatório?')) {
+                this.encerrarPlantaoRapido();
+                return;
+            }
+        }
+        this.elements.modalEncerrar.style.display = 'flex';
+    }
+
+    encerrarPlantaoRapido() {
+        this.plantaoAtivo.ativo = false;
+        
+        const dataTermino = new Date();
+        const dataInicio = new Date(this.plantaoAtivo.dataInicio);
+        
+        // Filtrar pendências não resolvidas para transferir
+        const passagensNaoResolvidas = this.plantaoAtivo.passagens.filter(p => !p.resolvido);
+        
+        const plantaoEncerrado = {
+            id: `plantao-${Date.now()}`,
+            setor: "UTI-01",
+            inicio: dataInicio.toISOString(),
+            termino: dataTermino.toISOString(),
+            duracao: this.calcularDuracao(dataInicio, dataTermino),
+            responsavel: "Enf. Responsável",
+            registros: [...this.plantaoAtivo.registros],
+            passagens: [...passagensNaoResolvidas],
+            relatorioFinal: "Plantão encerrado sem relatório (modo rápido)"
+        };
+        
+        // Adiciona ao histórico e limpa registros
+        this.plantaoAtivo.historico.unshift(plantaoEncerrado);
+        this.plantaoAtivo.registros = [];
+        
+        // Mantém apenas pendências não resolvidas para o próximo plantão
+        this.plantaoAtivo.passagens = passagensNaoResolvidas;
+        
+        this.salvarLocalStorage();
+        this.atualizarInterface();
+        this.atualizarStatusPlantao();
+        
+        alert('Plantão encerrado com sucesso!');
+    }
+
     encerrarPlantao() {
         const relatorio = document.getElementById('relatorio-encerramento').value.trim();
         
@@ -262,7 +317,7 @@ class PlantaoManager {
         this.atualizarStatusPlantao();
         this.fecharModalEncerrar();
         
-        alert('Plantão encerrado com sucesso!');
+        this.mostrarDashboardTransicao(plantaoEncerrado);
     }
 
     calcularDuracao(inicio, termino) {
@@ -324,10 +379,6 @@ class PlantaoManager {
         this.elements.inputAcrescentar.focus();
     }
 
-    abrirModalEncerrar() {
-        this.elements.modalEncerrar.style.display = 'flex';
-    }
-
     fecharModalAcrescentar() {
         this.elements.modalAcrescentar.style.display = 'none';
         this.elements.inputAcrescentar.value = '';
@@ -346,10 +397,6 @@ class PlantaoManager {
     salvarRegistro(e) {
         e.preventDefault();
         
-        if (!this.plantaoAtivo.ativo) {
-            this.iniciarPlantao();
-        }
-        
         const nomePaciente = document.getElementById('paciente').value.trim();
         const descricao = document.getElementById('ocorrencia').value.trim();
         
@@ -361,6 +408,19 @@ class PlantaoManager {
         if (pacienteExistente) {
             alert('Já existe um registro para este paciente no plantão atual.');
             return;
+        }
+        
+        const primeiroRegistro = this.plantaoAtivo.registros.length === 0;
+        
+        if (!this.plantaoAtivo.ativo && primeiroRegistro) {
+            const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const confirmarHora = confirm(`Plantão iniciado às ${horaAtual}. Está correto?`);
+            
+            if (confirmarHora) {
+                this.iniciarPlantao();
+            } else {
+                return; // Usuário cancelou
+            }
         }
         
         const novoRegistro = {
@@ -667,6 +727,18 @@ class PlantaoManager {
                                 </div>
                             `).join('')}
                         </div>
+                        <div class="historico-passagens">
+                            <h4>Pendências não resolvidas:</h4>
+                            ${plantao.passagens.length > 0 ? 
+                                plantao.passagens.map(passagem => `
+                                    <div class="passagem-item ${passagem.gravidade}">
+                                        <p>${passagem.texto}</p>
+                                        <small>Gravidade: ${passagem.gravidade}</small>
+                                    </div>
+                                `).join('') 
+                                : '<p>Todas as pendências foram resolvidas.</p>'
+                            }
+                        </div>
                     </div>
                 </div>
             `;
@@ -759,6 +831,70 @@ class PlantaoManager {
                 this.elements.horarioInicio.textContent = new Date().toLocaleString('pt-BR');
             }, 1000);
         }
+    }
+
+    verificarAtividadeSemPlantao() {
+        setInterval(() => {
+            if (!this.plantaoAtivo.ativo && 
+                (this.plantaoAtivo.registros.length > 0 || this.plantaoAtivo.passagens.length > 0)) {
+                
+                if (confirm(`Você esqueceu de iniciar seu plantão? Detectamos atividade desde ${new Date().toLocaleTimeString('pt-BR')}. Deseja iniciar agora?`)) {
+                    this.iniciarPlantao();
+                }
+            }
+        }, 30 * 60 * 1000); // 30 minutos
+    }
+
+    agendarConfirmacaoPosJornada() {
+        if (!this.plantaoAtivo.ativo) return;
+
+        const TERMINO_PREVISTO = 12 * 60 * 60 * 1000; // 12 horas
+        const inicio = new Date(this.plantaoAtivo.dataInicio);
+        const terminoPrevisto = new Date(inicio.getTime() + TERMINO_PREVISTO);
+        
+        setTimeout(() => {
+            if (this.plantaoAtivo.ativo) {
+                const resposta = confirm('Você ainda está em plantão?');
+                if (!resposta) {
+                    this.abrirModalEncerrar();
+                }
+            }
+        }, TERMINO_PREVISTO + (30 * 60 * 1000)); // 30 min após término
+    }
+
+    mostrarDashboardTransicao(plantao) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h2>PLANTÃO #${plantao.id.split('-')[1]} - ENCERRADO</h2>
+                <div class="dashboard-transicao">
+                    <div class="dash-item">
+                        <div class="dash-valor">${plantao.registros.length}</div>
+                        <div class="dash-label">Registros</div>
+                    </div>
+                    <div class="dash-item">
+                        <div class="dash-valor">${plantao.passagens.length}</div>
+                        <div class="dash-label">Pendências</div>
+                    </div>
+                    <div class="dash-item">
+                        <div class="dash-valor">${plantao.duracao}</div>
+                        <div class="dash-label">Duração</div>
+                    </div>
+                </div>
+                <div class="modal-botoes">
+                    <button id="btn-assumir-plantao" class="btn-salvar">Assumir próximo plantão</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        modal.style.display = 'flex';
+        
+        document.getElementById('btn-assumir-plantao').addEventListener('click', () => {
+            this.iniciarPlantao();
+            document.body.removeChild(modal);
+        });
     }
 }
 
