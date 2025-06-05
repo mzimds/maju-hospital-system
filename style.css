@@ -451,7 +451,7 @@ header {
     position: fixed;
     bottom: 1.5rem;
     left: 50%;
-    /*transform: translateX(-50%);*/
+    transform: translateX(-50%);
     z-index: 900;
 }
 
@@ -482,7 +482,7 @@ header {
 
 /* Correção do movimento do botão flutuante */
 .btn-flutuante-principal:active {
-    transform: /*translateX(-50%)*/ scale(0.95);
+    transform: translateX(-50%) scale(0.95);
 }
 
 /* Barras de pesquisa */
