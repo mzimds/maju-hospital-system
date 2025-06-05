@@ -3,10 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maju - Healthcare Shift Transition Platform</title>
+    <title>Salvare - Healthcare Shift Transition Platform</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <header class="app-header">
+        <div class="logo-container">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzJjM2U1MCIgZD0iTTEyIDBDNS4zNyAwIDAgNS4zNyAwIDEyczUuMzcgMTIgMTIgMTIgMTItNS4zNyAxMi0xMlMxOC42MyAwIDEyIDB6bTAgMjJhMTAgMTAgMCAxIDEgMC0yMCAxMCAxMCAwIDAgMSAwIDIweiIvPjxwYXRoIGZpbGw9IiMyYzNlNTAiIGQ9Ik0xMiA0YTEgMSAwIDAgMC0xIDF2NmExIDEgMCAwIDAgMSAxaDZhMSAxIDAgMCAwIDEtMVY1YTEgMSAwIDAgMC0xLTF6Ii8+PC9zdmc+" alt="Salvare Logo" class="logo">
+            <h1>Salvare</h1>
+        </div>
+    </header>
+
     <div class="container">
         <header class="header">
             <div class="setor-info">
@@ -212,6 +219,18 @@
                         <button type="submit" class="btn-salvar">Salvar</button>
                     </div>
                 </form>
+            </div>
+        </div>
+        
+        <!-- Modal para Confirmações Genéricas -->
+        <div class="modal" id="modal-confirmacao">
+            <div class="modal-content">
+                <h2 id="confirmacao-titulo">Confirmação</h2>
+                <p id="confirmacao-mensagem"></p>
+                <div class="modal-botoes">
+                    <button type="button" class="btn-cancelar" id="btn-cancelar-confirmacao">Cancelar</button>
+                    <button type="button" class="btn-salvar" id="btn-confirmar-ok">OK</button>
+                </div>
             </div>
         </div>
     </div>
