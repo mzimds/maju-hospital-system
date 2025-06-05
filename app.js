@@ -250,8 +250,11 @@ class PlantaoManager {
             relatorioFinal: relatorio || "Nenhum relatório fornecido"
         };
         
+        // Adiciona ao histórico e limpa registros
         this.plantaoAtivo.historico.unshift(plantaoEncerrado);
         this.plantaoAtivo.registros = [];
+        
+        // Mantém apenas pendências não resolvidas para o próximo plantão
         this.plantaoAtivo.passagens = passagensNaoResolvidas;
         
         this.salvarLocalStorage();
@@ -635,37 +638,35 @@ class PlantaoManager {
                 <div class="plantao-card" data-id="${plantao.id}">
                     <div class="cabecalho-registro">
                         <h3>${diaSemana}, ${dataFormatada}</h3>
-                        <div>${plantao.duracao}</div>
+                        <div class="duracao-plantao">${plantao.duracao}</div>
                     </div>
-                    <div class="plantao-detalhes">
-                        <div class="entrada-registro">
-                            <p><strong>Período:</strong> ${inicioDate.toLocaleString('pt-BR')} - ${terminoDate.toLocaleString('pt-BR')}</p>
-                        </div>
-                        <div class="entrada-registro">
-                            <p><strong>Responsável:</strong> ${plantao.responsavel}</p>
-                        </div>
-                        <div class="entrada-registro">
-                            <p><strong>Relatório Final:</strong> ${plantao.relatorioFinal}</p>
-                        </div>
-                        <div class="entrada-registro">
-                            <p><strong>Registros:</strong> ${plantao.registros.length}</p>
-                        </div>
-                        ${plantao.passagens.length > 0 ? `
-                        <div class="entrada-registro">
-                            <p><strong>Pendências Pendentes:</strong> ${plantao.passagens.length}</p>
-                        </div>
-                        ` : ''}
+                    <div class="resumo-plantao">
+                        <small>${plantao.registros.length} registros</small>
+                        <small>${plantao.passagens.length} pendências</small>
                     </div>
                     <div class="ocorrencias-expandidas" style="display: none;">
-                        ${plantao.registros.map(registro => `
-                            <div class="ocorrencia-item">
-                                <p><strong>${registro.paciente}</strong></p>
-                                ${registro.historico.map(entry => `
-                                    <p>${entry.texto}</p>
-                                    <small>${entry.autor} - ${entry.data}</small>
-                                `).join('')}
+                        <div class="plantao-detalhes">
+                            <div class="entrada-registro">
+                                <p><strong>Período:</strong> ${inicioDate.toLocaleString('pt-BR')} - ${terminoDate.toLocaleString('pt-BR')}</p>
                             </div>
-                        `).join('')}
+                            <div class="entrada-registro">
+                                <p><strong>Responsável:</strong> ${plantao.responsavel}</p>
+                            </div>
+                            <div class="entrada-registro">
+                                <p><strong>Relatório Final:</strong> ${plantao.relatorioFinal}</p>
+                            </div>
+                        </div>
+                        <div class="historico-registros">
+                            ${plantao.registros.map(registro => `
+                                <div class="ocorrencia-item">
+                                    <p><strong>${registro.paciente}</strong></p>
+                                    ${registro.historico.map(entry => `
+                                        <p>${entry.texto}</p>
+                                        <small>${entry.autor} - ${entry.data}</small>
+                                    `).join('')}
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 </div>
             `;
