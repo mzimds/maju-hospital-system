@@ -197,7 +197,7 @@ class PlantaoManager {
         if(this.plantaoAtivo.ativo) {
             this.elements.statusElement.classList.remove('inativo');
             this.elements.statusElement.classList.add('ativo');
-            this.elements.statusTexto.textContent = 'Plantão Atual';
+            this.elements.statusTexto.textContent = 'Plantão Ativo';
             this.elements.btnEncerrar.textContent = 'Encerrar';
             this.elements.btnEncerrar.style.color = '#e74c3c';
             
