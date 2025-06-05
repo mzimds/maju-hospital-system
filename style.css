@@ -26,23 +26,51 @@ body {
     background: var(--background);
     color: var(--text);
     line-height: 1.5;
-    padding: 1rem;
+    padding: 0;
     font-weight: 400;
 }
 
-h1, h2, h3, h4 {
+/* ===== APP HEADER ===== */
+.app-header {
+    background-color: white;
+    box-shadow: var(--card-shadow);
+    padding: 0.5rem 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.logo {
+    width: 36px;
+    height: 36px;
+}
+
+.app-header h1 {
+    font-size: 1.5rem;
     font-weight: 500;
     color: var(--primary);
+    letter-spacing: -0.5px;
 }
 
 /* ===== HEADER ===== */
-header {
+.header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border);
+    padding: 1rem;
+    padding-top: 1.5rem;
 }
 
 .setor-info {
@@ -107,6 +135,7 @@ header {
     display: flex;
     margin-bottom: 1rem;
     border-bottom: 1px solid var(--border);
+    padding: 0 1rem;
 }
 
 .aba {
@@ -145,6 +174,7 @@ header {
 
 .conteudo-aba {
     display: none;
+    padding: 0 1rem;
 }
 
 .conteudo-aba.ativa {
@@ -487,10 +517,11 @@ header {
     width: 100%;
     height: 100%;
     padding-bottom: 4px;
+    transition: transform 0.1s;
 }
 
-.btn-flutuante-principal:active {
-    transform: translateX(-50%) scale(0.95);
+.btn-flutuante-principal:active span {
+    transform: scale(0.9);
 }
 
 /* Barras de pesquisa */
@@ -628,6 +659,14 @@ header {
     border-top: 1px dashed var(--border);
 }
 
+.historico-passagens h4 {
+    margin-bottom: 1rem;
+}
+
+.historico-passagens .passagem-card {
+    margin-bottom: 0.8rem;
+}
+
 .passagem-item {
     background: rgba(0, 0, 0, 0.02);
     padding: 0.8rem;
@@ -672,6 +711,16 @@ header {
     margin-top: 0.5rem;
 }
 
+/* Modal de confirmação */
+#modal-confirmacao .modal-content {
+    max-width: 400px;
+}
+
+#modal-confirmacao p {
+    padding: 0 1.3rem;
+    margin-bottom: 1.3rem;
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
     .abas {
@@ -695,4 +744,10 @@ header {
     padding: 1.5rem;
     color: var(--text-light);
     font-size: 0.95rem;
+}
+
+/* Ajuste para o título do plantão no histórico */
+.plantao-card .cabecalho-registro h3 {
+    font-size: 0.95rem;
+    flex: 1;
 }
