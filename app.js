@@ -2,19 +2,20 @@ class PlantaoManager {
     constructor() {
         // Inicializa o estado do plantão
         this.plantaoAtivo = {
-            ativo: JSON.parse(localStorage.getItem('plantaoAtivo')) ?? true,
+            ativo: JSON.parse(localStorage.getItem('plantaoAtivo')) ?? false,
             registros: JSON.parse(localStorage.getItem('registros')) || [],
             historico: JSON.parse(localStorage.getItem('historicoPlantao')) || [],
-            dataInicio: JSON.parse(localStorage.getItem('dataInicio')) || new Date().toISOString(),
+            dataInicio: JSON.parse(localStorage.getItem('dataInicio')) || null,
             passagens: JSON.parse(localStorage.getItem('passagens')) || [],
-            plantaoId: JSON.parse(localStorage.getItem('plantaoId')) || `plantao-${Date.now()}`
+            plantaoId: JSON.parse(localStorage.getItem('plantaoId')) || `plantao-${Date.now()}`,
+            turno: JSON.parse(localStorage.getItem('turno')) || null
         };
 
         // Horário do plantão (07:00 às 19:00 para Plantão A, 19:00 às 07:00 para Plantão B)
-        this.horarioPlantao = {
-            inicio: 7, // 07:00
-            termino: 19 // 19:00
-        };
+        this.HORARIO_INICIO_PLANTAO_A = 7; // 07:00
+        this.HORARIO_FIM_PLANTAO_A = 19; // 19:00
+        this.HORARIO_INICIO_PLANTAO_B = 19; // 19:00
+        this.HORARIO_FIM_PLANTAO_B = 7; // 07:00 do dia seguinte
 
         this.registroSelecionado = null;
         this.passagemSelecionada = null;
@@ -26,6 +27,7 @@ class PlantaoManager {
         this.verificarAtividadeSemPlantao();
         this.agendarConfirmacaoPosJornada();
         this.verificarSugestaoInicio();
+        this.iniciarVerificacaoAutomatica();
     }
 
     initElements() {
@@ -65,7 +67,10 @@ class PlantaoManager {
             confirmacaoTitulo: document.getElementById('confirmacao-titulo'),
             confirmacaoMensagem: document.getElementById('confirmacao-mensagem'),
             btnCancelarConfirmacao: document.getElementById('btn-cancelar-confirmacao'),
-            btnConfirmarOk: document.getElementById('btn-confirmar-ok')
+            btnConfirmarOk: document.getElementById('btn-confirmar-ok'),
+            zonaCinzaAviso: document.getElementById('zona-cinza-aviso'),
+            plantaoPeriodo: document.getElementById('plantao-periodo'),
+            plantaoTurno: document.getElementById('plantao-turno')
         };
     }
 
@@ -245,6 +250,130 @@ class PlantaoManager {
         }
     }
 
+    determinarTurnoAtual() {
+        const agora = new Date();
+        const hora = agora.getHours();
+        
+        // Plantão A: 07:00 - 19:00
+        if (hora >= this.HORARIO_INICIO_PLANTAO_A && hora < this.HORARIO_FIM_PLANTAO_A) {
+            return {
+                tipo: 'A',
+                inicio: new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), this.HORARIO_INICIO_PLANTAO_A, 0),
+                termino: new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), this.HORARIO_FIM_PLANTAO_A, 0),
+                periodo: '07:00 - 19:00'
+            };
+        } 
+        // Plantão B: 19:00 - 07:00 (do dia seguinte)
+        else {
+            const termino = new Date(agora);
+            termino.setDate(termino.getDate() + 1);
+            termino.setHours(this.HORARIO_FIM_PLANTAO_B, 0, 0, 0);
+            
+            return {
+                tipo: 'B',
+                inicio: new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), this.HORARIO_INICIO_PLANTAO_B, 0),
+                termino,
+                periodo: '19:00 - 07:00'
+            };
+        }
+    }
+
+    verificarZonaCinza() {
+        const agora = new Date();
+        const turno = this.determinarTurnoAtual();
+        const dezMinutos = 10 * 60 * 1000; // 10 minutos em milissegundos
+        
+        return {
+            emZonaCinza: (agora - turno.inicio) < dezMinutos || (turno.termino - agora) < dezMinutos,
+            turnoAtual: turno.tipo,
+            proximoTurno: turno.tipo === 'A' ? 'B' : 'A'
+        };
+    }
+
+    iniciarVerificacaoAutomatica() {
+        setInterval(() => {
+            // Verificar se precisa trocar de plantão
+            const agora = new Date();
+            const turno = this.determinarTurnoAtual();
+            
+            if (!this.plantaoAtivo.ativo && 
+                agora >= turno.inicio && 
+                agora < turno.termino) {
+                this.iniciarPlantaoAutomatico();
+            }
+            
+            // Atualizar zona cinza
+            this.atualizarZonaCinza();
+        }, 60000); // Verificar a cada minuto
+    }
+
+    atualizarZonaCinza() {
+        const zonaCinza = this.verificarZonaCinza();
+        const aviso = this.elements.zonaCinzaAviso;
+        
+        if (zonaCinza.emZonaCinza) {
+            aviso.style.display = 'block';
+            aviso.innerHTML = `⚠ Estamos na janela de troca de plantão. 
+                Intercorrências registradas agora serão vinculadas ao Plantão ${zonaCinza.proximoTurno}.`;
+        } else {
+            aviso.style.display = 'none';
+        }
+    }
+
+    iniciarPlantaoAutomatico() {
+        const turno = this.determinarTurnoAtual();
+        
+        this.plantaoAtivo.ativo = true;
+        this.plantaoAtivo.dataInicio = new Date().toISOString();
+        this.plantaoAtivo.turno = turno.tipo;
+        this.salvarLocalStorage();
+        this.atualizarStatusPlantao();
+    }
+
+    encerrarPlantaoAutomatico() {
+        const dataTermino = new Date();
+        const turno = this.plantaoAtivo.turno;
+        
+        const plantaoEncerrado = {
+            id: this.plantaoAtivo.plantaoId,
+            setor: "UTI-01",
+            turno: turno,
+            inicio: this.plantaoAtivo.dataInicio,
+            termino: dataTermino.toISOString(),
+            duracao: this.calcularDuracao(
+                new Date(this.plantaoAtivo.dataInicio), 
+                dataTermino
+            ),
+            responsavel: "Enf. Responsável",
+            registros: [...this.plantaoAtivo.registros],
+            passagens: this.plantaoAtivo.passagens.filter(p => !p.resolvido),
+            relatorioFinal: "Plantão encerrado automaticamente"
+        };
+        
+        this.plantaoAtivo.historico.unshift(plantaoEncerrado);
+        this.plantaoAtivo.ativo = false;
+        this.plantaoAtivo.registros = [];
+        
+        // Mantém pendências não resolvidas
+        this.plantaoAtivo.passagens = this.plantaoAtivo.passagens.filter(p => !p.resolvido);
+        
+        // Novo ID para próximo plantão
+        this.plantaoAtivo.plantaoId = `plantao-${Date.now()}`;
+        
+        this.salvarLocalStorage();
+        this.atualizarInterface();
+        this.atualizarStatusPlantao();
+    }
+
+    verificarInicioAutomatico() {
+        const turno = this.determinarTurnoAtual();
+        const agora = new Date();
+        
+        if (agora >= turno.inicio && agora < turno.termino) {
+            this.iniciarPlantaoAutomatico();
+        }
+    }
+
     atualizarStatusPlantao() {
         if(this.plantaoAtivo.ativo) {
             this.elements.statusElement.classList.remove('inativo');
@@ -257,6 +386,22 @@ class PlantaoManager {
             this.elements.abaIntercorrencia.style.display = 'flex';
             this.elements.abaPendencia.style.display = 'flex';
             this.mostrarAba('intercorrencia');
+
+            // Atualizar informações do turno
+            const turno = this.determinarTurnoAtual();
+            this.elements.plantaoTurno.textContent = `Plantão ${turno.tipo} (${turno.periodo})`;
+            
+            const inicio = new Date(this.plantaoAtivo.dataInicio);
+            const formatoData = { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            
+            this.elements.plantaoPeriodo.textContent = 
+                `${inicio.toLocaleDateString('pt-BR', formatoData)} - Ativo`;
         } else {
             this.elements.statusElement.classList.remove('ativo');
             this.elements.statusElement.classList.add('inativo');
@@ -268,6 +413,9 @@ class PlantaoManager {
             this.elements.abaIntercorrencia.style.display = 'none';
             this.elements.abaPendencia.style.display = 'flex';
             this.mostrarAba('pendencia');
+
+            this.elements.plantaoTurno.textContent = "Plantão Inativo";
+            this.elements.plantaoPeriodo.textContent = "";
         }
         this.configurarBotaoFlutuante();
         this.atualizarContadorPassagens();
@@ -325,6 +473,7 @@ class PlantaoManager {
         const plantaoEncerrado = {
             id: this.plantaoAtivo.plantaoId,
             setor: "UTI-01",
+            turno: this.plantaoAtivo.turno,
             inicio: dataInicio.toISOString(),
             termino: dataTermino.toISOString(),
             duracao: this.calcularDuracao(dataInicio, dataTermino),
@@ -372,6 +521,7 @@ class PlantaoManager {
         const plantaoEncerrado = {
             id: this.plantaoAtivo.plantaoId,
             setor: "UTI-01",
+            turno: this.plantaoAtivo.turno,
             inicio: dataInicio.toISOString(),
             termino: dataTermino.toISOString(),
             duracao: this.calcularDuracao(dataInicio, dataTermino),
@@ -395,10 +545,12 @@ class PlantaoManager {
         
         this.salvarLocalStorage();
         this.atualizarInterface();
-        this.atualizarStatusPlantao();
         this.fecharModalEncerrar();
         
-        this.mostrarDashboardTransicao(plantaoEncerrado);
+        // Mostrar dashboard após pequeno delay
+        setTimeout(() => {
+            this.mostrarDashboardTransicao(plantaoEncerrado);
+        }, 300);
     }
 
     calcularDuracao(inicio, termino) {
@@ -422,8 +574,10 @@ class PlantaoManager {
             );
         }
 
+        const turno = this.determinarTurnoAtual();
         this.plantaoAtivo.ativo = true;
         this.plantaoAtivo.dataInicio = new Date().toISOString();
+        this.plantaoAtivo.turno = turno.tipo;
         this.salvarLocalStorage();
         this.atualizarStatusPlantao();
     }
@@ -435,6 +589,7 @@ class PlantaoManager {
         localStorage.setItem('dataInicio', JSON.stringify(this.plantaoAtivo.dataInicio));
         localStorage.setItem('passagens', JSON.stringify(this.plantaoAtivo.passagens));
         localStorage.setItem('plantaoId', JSON.stringify(this.plantaoAtivo.plantaoId));
+        localStorage.setItem('turno', JSON.stringify(this.plantaoAtivo.turno));
     }
 
     abrirModal() {
@@ -459,10 +614,8 @@ class PlantaoManager {
         document.getElementById('editar-passagem-atendimento').value = passagem.atendimento || '';
         this.elements.inputEditarPassagemTexto.value = passagem.texto;
         
-        // Marcar o tipo correto
-        document.querySelectorAll('input[name="tipo-editar"]').forEach(radio => {
-            radio.checked = (radio.value === passagem.tipo);
-        });
+        // Selecionar o tipo correto
+        document.getElementById('tipo-editar-passagem').value = passagem.tipo;
         
         this.elements.modalEditarPassagem.style.display = 'flex';
     }
@@ -560,7 +713,7 @@ class PlantaoManager {
         const texto = this.elements.inputPassagemTexto.value.trim();
         if (!texto) return;
         
-        const tipo = document.querySelector('input[name="tipo"]:checked').value;
+        const tipo = document.getElementById('tipo-passagem').value;
         const paciente = document.getElementById('passagem-paciente').value.trim();
         const leito = document.getElementById('passagem-leito').value.trim();
         const atendimento = document.getElementById('passagem-atendimento').value.trim();
@@ -591,7 +744,7 @@ class PlantaoManager {
         const paciente = document.getElementById('editar-passagem-paciente').value.trim();
         const leito = document.getElementById('editar-passagem-leito').value.trim();
         const atendimento = document.getElementById('editar-passagem-atendimento').value.trim();
-        const tipo = document.querySelector('input[name="tipo-editar"]:checked').value;
+        const tipo = document.getElementById('tipo-editar-passagem').value;
         
         if (!texto || !this.passagemSelecionada) return;
         
@@ -846,19 +999,30 @@ class PlantaoManager {
             ? this.plantaoAtivo.historico.map(plantao => {
                 const inicioDate = new Date(plantao.inicio);
                 const terminoDate = new Date(plantao.termino);
-                const diaSemana = diasSemana[inicioDate.getDay()];
-                const dataFormatada = inicioDate.toLocaleDateString('pt-BR');
-                const periodo = inicioDate.getHours() < 12 ? 'A (07:00 - 19:00)' : 'B (19:00 - 07:00)';
+                
+                // Verificar se o plantão atravessou dias
+                const mesmoDia = inicioDate.getDate() === terminoDate.getDate() && 
+                                inicioDate.getMonth() === terminoDate.getMonth() &&
+                                inicioDate.getFullYear() === terminoDate.getFullYear();
+                
+                const dataFormatada = mesmoDia ? 
+                    inicioDate.toLocaleDateString('pt-BR') : 
+                    `${inicioDate.toLocaleDateString('pt-BR')} - ${terminoDate.toLocaleDateString('pt-BR')}`;
                 
                 return `
                 <div class="plantao-card" data-id="${plantao.id}">
                     <div class="cabecalho-registro">
-                        <h3>Plantão ${periodo} - ${diaSemana}, ${dataFormatada}</h3>
+                        <h3>
+                            <span class="tipo-tag">Plantão ${plantao.turno}</span>
+                            ${dataFormatada}
+                        </h3>
                         <div class="duracao-plantao">${plantao.duracao}</div>
                     </div>
                     <div class="resumo-plantao">
+                        <span>${plantao.periodo}</span>
                         <span>Registros: ${plantao.registros.length}</span>
                         <span>Pendências: ${plantao.passagens.length}</span>
+                        <span>Unidade: ${plantao.setor}</span>
                     </div>
                     <div class="ocorrencias-expandidas" style="display: none;">
                         <div class="plantao-detalhes">
@@ -1085,8 +1249,8 @@ class PlantaoManager {
     verificarHorarioAtivo() {
         const agora = new Date();
         const horaAtual = agora.getHours();
-        return horaAtual >= this.horarioPlantao.inicio && 
-               horaAtual < this.horarioPlantao.termino;
+        return horaAtual >= this.HORARIO_INICIO_PLANTAO_A && 
+               horaAtual < this.HORARIO_FIM_PLANTAO_A;
     }
 
     // Verifica periodicamente se está no horário do plantão e sugere iniciar
