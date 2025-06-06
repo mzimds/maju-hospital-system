@@ -18,11 +18,15 @@
         <header class="header">
             <div class="setor-info">
                 <h1>UTI-01</h1>
-                <div class="info-turno">Plantão A (07:00 - 19:00)</div>
+                <div class="info-turno">
+                    <div id="plantao-turno">Plantão A (07:00 - 19:00)</div>
+                    <div id="plantao-periodo">06/06/2025, 16:50:45</div>
+                </div>
                 <div class="status ativo">
                     <span id="status-texto">Plantão Ativo</span>
                     <small id="horario-inicio"></small>
                 </div>
+                <div id="zona-cinza-aviso" class="zona-cinza-aviso"></div>
             </div> 
             <button id="btn-encerrar">Encerrar</button>
         </header>
@@ -167,24 +171,13 @@
                 <h2>Nova Pendência</h2>
                 <form id="form-nova-passagem">
                     <div class="form-group">
-                        <div class="tipo-opcoes">
-                            <label class="tipo-opcao">
-                                <input type="radio" name="tipo" value="transferencia" required>
-                                <span>Transferência</span>
-                            </label>
-                            <label class="tipo-opcao">
-                                <input type="radio" name="tipo" value="checagem-exame" checked>
-                                <span>Checagem de exame</span>
-                            </label>
-                            <label class="tipo-opcao">
-                                <input type="radio" name="tipo" value="reavaliacao">
-                                <span>Reavaliação</span>
-                            </label>
-                            <label class="tipo-opcao">
-                                <input type="radio" name="tipo" value="outros">
-                                <span>Outros</span>
-                            </label>
-                        </div>
+                        <label for="tipo-passagem">Tipo</label>
+                        <select id="tipo-passagem" name="tipo" required>
+                            <option value="transferencia">Transferência</option>
+                            <option value="checagem-exame" selected>Checagem de exame</option>
+                            <option value="reavaliacao">Reavaliação</option>
+                            <option value="outros">Outros</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <input 
@@ -232,24 +225,13 @@
                 <h2>Editar Pendência</h2>
                 <form id="form-editar-passagem">
                     <div class="form-group">
-                        <div class="tipo-opcoes">
-                            <label class="tipo-opcao">
-                                <input type="radio" name="tipo-editar" value="transferencia" required>
-                                <span>Transferência</span>
-                            </label>
-                            <label class="tipo-opcao">
-                                <input type="radio" name="tipo-editar" value="checagem-exame">
-                                <span>Checagem de exame</span>
-                            </label>
-                            <label class="tipo-opcao">
-                                <input type="radio" name="tipo-editar" value="reavaliacao">
-                                <span>Reavaliação</span>
-                            </label>
-                            <label class="tipo-opcao">
-                                <input type="radio" name="tipo-editar" value="outros">
-                                <span>Outros</span>
-                            </label>
-                        </div>
+                        <label for="tipo-editar-passagem">Tipo</label>
+                        <select id="tipo-editar-passagem" name="tipo-editar" required>
+                            <option value="transferencia">Transferência</option>
+                            <option value="checagem-exame">Checagem de exame</option>
+                            <option value="reavaliacao">Reavaliação</option>
+                            <option value="outros">Outros</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <input 
