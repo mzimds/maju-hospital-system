@@ -38,10 +38,35 @@ body {
     overflow-y: auto;
 }
 
-/* ===== APP HEADER ===== */
+/* ===== APP HEADER COM FROSTED GLASS ===== */
+
+.custom-header {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.custom-header .line1 {
+  letter-spacing: 3px;
+  word-spacing: 15px;
+  margin-bottom: 10px;
+  font-size: 18px;
+  color: #1f2124;
+}
+
+.custom-header .line2 {
+  font-weight: bold;
+  font-size: 22px;
+  letter-spacing: 1px;
+  color: #1f2124;
+}
+
+
 .app-header {
-    background-color: white;
-    box-shadow: var(--card-shadow);
+    background: rgba(200, 200, 200, 0.7);
+    backdrop-filter: blur(0.5px);
+    -webkit-backdrop-filter: blur(5px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding: 0.5rem 1rem;
     display: flex;
     justify-content: center;
@@ -51,28 +76,26 @@ body {
     z-index: 1000;
 }
 
-.logo-container {
-    display: flex;
-    align-items: center;
-}
-
 .app-header h1 {
-    font-size: 1.8rem;
+    color: black;
+    font-size: 1.5rem;
     font-weight: 600;
-    color: var(--primary);
     letter-spacing: -0.5px;
 }
 
-/* ===== HEADER ===== */
+/* ===== HEADER ATUALIZADO ===== */
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
-    padding: 1rem;
-    padding-top: 1.5rem;
+    margin: 1rem;
+    margin-top: 0.5rem;
+    padding: 1.2rem;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(5px);
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border);
 }
 
 .setor-info {
@@ -83,21 +106,28 @@ body {
 .setor-info h1 {
     font-size: 1.6rem;
     font-weight: 500;
+    margin-bottom: 0.3rem;
 }
 
 .info-turno {
     font-size: 0.9rem;
     color: var(--text-light);
     margin-top: 0.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
 }
 
 .status {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 0.6rem;
     margin-top: 0.3rem;
     font-size: 0.9rem;
     color: var(--text-light);
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    background: rgba(39, 174, 96, 0.1);
 }
 
 .status::before {
@@ -110,6 +140,10 @@ body {
 
 .status.ativo::before {
     background: var(--success);
+}
+
+.status.inativo {
+    background: rgba(231, 76, 60, 0.1);
 }
 
 .status.inativo::before {
@@ -130,6 +164,17 @@ body {
 
 #btn-encerrar:hover {
     background: var(--danger-light);
+}
+
+/* ===== AVISO ZONA CINZA ===== */
+.zona-cinza-aviso {
+    background: rgba(255, 204, 0, 0.15);
+    border-left: 3px solid #ffcc00;
+    padding: 8px 12px;
+    margin-top: 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    display: none;
 }
 
 /* ===== ABAS ===== */
@@ -163,8 +208,7 @@ body {
 
 .contador {
     position: relative;
-    top: 0;
-    right: 0;
+    top: -1px;
     background: none;
     color: var(--text); 
     border-radius: 0;
@@ -207,7 +251,7 @@ body {
 .cabecalho-registro {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start; /* Alinhar ao topo */
     padding: 1rem;
     border-bottom: 1px solid var(--border);
 }
@@ -215,6 +259,7 @@ body {
 .cabecalho-registro h3 {
     font-size: 1.05rem;
     font-weight: 500;
+    flex: 1;
 }
 
 .btn-acrescentar {
@@ -230,6 +275,8 @@ body {
     cursor: pointer;
     color: var(--text-light);
     transition: all 0.2s;
+    position: relative;
+    top: -2px; /* Ajuste fino de posição */
 }
 
 .btn-acrescentar:hover {
@@ -402,7 +449,8 @@ body {
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
     width: 100%;
     padding: 0.7rem;
     border: 1px solid var(--border);
@@ -453,43 +501,7 @@ body {
     background: #1a2530;
 }
 
-/* Tipo */
-.tipo-opcoes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.5rem;
-}
-
-.tipo-opcao {
-    flex: 1;
-    min-width: 100px;
-}
-
-.tipo-opcao input {
-    display: none;
-}
-
-.tipo-opcao span {
-    display: block;
-    text-align: center;
-    padding: 0.5rem;
-    border-radius: 5px;
-    background: #f9fafb;
-    border: 1px solid var(--border);
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.85rem;
-    font-weight: 400;
-}
-
-.tipo-opcao input:checked + span {
-    background: var(--primary);
-    color: white !important;
-    border-color: var(--primary);
-}
-
-/* ===== BOTÃO FLUTUANTE PRINCIPAL ===== */
+/* ===== BOTÃO FLUTUANTE PRINCIPAL COM FROSTED GLASS ===== */
 .floating-container {
     position: fixed;
     bottom: 1.5rem;
@@ -502,7 +514,9 @@ body {
     width: 56px;
     height: 56px;
     border-radius: 6px;
-    background: var(--primary);
+    background: rgba(33, 44, 61, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: white;
     border: none;
     font-size: 2rem;
@@ -613,6 +627,7 @@ body {
     display: flex;
     gap: 1rem;
     color: var(--text-light);
+    flex-wrap: wrap;
 }
 
 .duracao-plantao {
@@ -633,6 +648,7 @@ body {
     background-color: #f9fafb;
     border-top: 1px solid var(--border);
     margin-top: 0.5rem;
+    display: none;
 }
 
 .historico-registros {
@@ -730,9 +746,33 @@ body {
     .floating-container {
         bottom: 1rem;
     }
+
+    .dashboard-transicao {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        width: 95%;
+        margin: 0.5rem;
+    }
     
-    .tipo-opcao {
-        min-width: 100px;
+    .form-group input, 
+    .form-group textarea,
+    .form-group select {
+        font-size: 16px;
+    }
+    
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    #btn-encerrar {
+        align-self: flex-end;
     }
 }
 
@@ -756,6 +796,7 @@ body {
     flex-wrap: wrap;
     gap: 0.5rem;
     font-size: 0.9rem;
+    margin: 0.5rem 1rem;
 }
 
 .info-paciente span {
@@ -774,7 +815,8 @@ body {
 }
 
 /* Modal de nova pendência com rolagem */
-#modal-nova-passagem .modal-content {
+#modal-nova-passagem .modal-content,
+#modal-editar-passagem .modal-content {
     max-height: 80vh;
     overflow-y: auto;
 }
