@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Palantir - Healthcare Shift Transition Platform</title>
+    <title>Salvare - Healthcare Shift Transition Platform</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <header class="app-header">
         <div class="logo-container">
-            <h1>Palantir</h1>
+            <h1>Salvare</h1>
         </div>
     </header>
 
@@ -27,15 +28,15 @@
         </header>
 
         <div class="abas">
-            <div class="aba ativa" data-aba="plantao" id="aba-plantao-ativo">Plantão Atual</div>
-            <div class="aba" data-aba="passagens" id="aba-passagens">
-                Pendências <span id="contador-passagens" class="contador">0</span>
+            <div class="aba ativa" data-aba="intercorrencia" id="aba-intercorrencia">Intercorrência</div>
+            <div class="aba" data-aba="pendencia" id="aba-pendencia">
+                Pendência <span id="contador-passagens" class="contador">0</span>
             </div>
             <div class="aba" data-aba="historico" id="aba-historico">Histórico</div>
         </div>
 
-        <div class="conteudo-aba ativa" id="aba-plantao">
-            <div class="barra-pesquisa" id="barra-pesquisa-plantao">
+        <div class="conteudo-aba ativa" id="aba-intercorrencia">
+            <div class="barra-pesquisa" id="barra-pesquisa-intercorrencia">
                 <div class="pesquisa-container">
                     <input type="text" id="input-busca" placeholder="Buscar paciente...">
                     <span class="icone-busca"></span>
@@ -46,7 +47,7 @@
             <main class="registros" id="registros"></main>
         </div>
 
-        <div class="conteudo-aba" id="aba-passagens">
+        <div class="conteudo-aba" id="aba-pendencia">
             <div class="barra-pesquisa">
                 <div class="pesquisa-container">
                     <input type="text" id="input-busca-passagens" placeholder="Buscar em pendências...">
@@ -73,24 +74,39 @@
             </button>
         </div>
 
-        <!-- Modal para Novo Registro -->
+        <!-- Modal para Novo Registro de Intercorrência -->
         <div class="modal" id="modal">
             <div class="modal-content">
-                <h2>Novo Registro</h2>
+                <h2>Nova Intercorrência</h2>
                 <form id="form">
                     <div class="form-group">
                         <input 
                             type="text" 
                             id="paciente" 
-                            placeholder="Ex: Paciente João Silva | Quarto 205"
+                            placeholder="Nome do Paciente"
                             required
                         >
                     </div>
-
+                    <div class="form-group">
+                        <input 
+                            type="text" 
+                            id="leito" 
+                            placeholder="Leito"
+                            required
+                        >
+                    </div>
+                    <div class="form-group">
+                        <input 
+                            type="text" 
+                            id="atendimento" 
+                            placeholder="Atendimento (ID)"
+                            required
+                        >
+                    </div>
                     <div class="form-group">
                         <textarea 
                             id="ocorrencia" 
-                            placeholder="Descreva detalhadamente a ocorrência..."
+                            placeholder="Descreva detalhadamente a intercorrência..."
                             rows="5"
                             required
                         ></textarea>
@@ -151,29 +167,56 @@
                 <h2>Nova Pendência</h2>
                 <form id="form-nova-passagem">
                     <div class="form-group">
+                        <div class="tipo-opcoes">
+                            <label class="tipo-opcao">
+                                <input type="radio" name="tipo" value="transferencia" required>
+                                <span>Transferência</span>
+                            </label>
+                            <label class="tipo-opcao">
+                                <input type="radio" name="tipo" value="checagem-exame" checked>
+                                <span>Checagem de exame</span>
+                            </label>
+                            <label class="tipo-opcao">
+                                <input type="radio" name="tipo" value="reavaliacao">
+                                <span>Reavaliação</span>
+                            </label>
+                            <label class="tipo-opcao">
+                                <input type="radio" name="tipo" value="outros">
+                                <span>Outros</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <input 
+                            type="text" 
+                            id="passagem-paciente" 
+                            placeholder="Nome do Paciente"
+                            required
+                        >
+                    </div>
+                    <div class="form-group">
+                        <input 
+                            type="text" 
+                            id="passagem-leito" 
+                            placeholder="Leito"
+                            required
+                        >
+                    </div>
+                    <div class="form-group">
+                        <input 
+                            type="text" 
+                            id="passagem-atendimento" 
+                            placeholder="Atendimento (ID)"
+                            required
+                        >
+                    </div>
+                    <div class="form-group">
                         <textarea 
                             id="input-passagem-texto" 
                             placeholder="Descreva a nova pendência..." 
                             rows="4"
                             required
                         ></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Gravidade:</label>
-                        <div class="gravidade-opcoes">
-                            <label class="gravidade-opcao">
-                                <input type="radio" name="gravidade" value="alta" required>
-                                <span class="alta">Alta</span>
-                            </label>
-                            <label class="gravidade-opcao">
-                                <input type="radio" name="gravidade" value="media" checked>
-                                <span class="media">Média</span>
-                            </label>
-                            <label class="gravidade-opcao">
-                                <input type="radio" name="gravidade" value="baixa">
-                                <span class="baixa">Baixa</span>
-                            </label>
-                        </div>
                     </div>
                     <div class="modal-botoes">
                         <button type="button" class="btn-cancelar btn-cancelar-nova-passagem">Cancelar</button>
@@ -189,29 +232,56 @@
                 <h2>Editar Pendência</h2>
                 <form id="form-editar-passagem">
                     <div class="form-group">
+                        <div class="tipo-opcoes">
+                            <label class="tipo-opcao">
+                                <input type="radio" name="tipo-editar" value="transferencia" required>
+                                <span>Transferência</span>
+                            </label>
+                            <label class="tipo-opcao">
+                                <input type="radio" name="tipo-editar" value="checagem-exame">
+                                <span>Checagem de exame</span>
+                            </label>
+                            <label class="tipo-opcao">
+                                <input type="radio" name="tipo-editar" value="reavaliacao">
+                                <span>Reavaliação</span>
+                            </label>
+                            <label class="tipo-opcao">
+                                <input type="radio" name="tipo-editar" value="outros">
+                                <span>Outros</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <input 
+                            type="text" 
+                            id="editar-passagem-paciente" 
+                            placeholder="Nome do Paciente"
+                            required
+                        >
+                    </div>
+                    <div class="form-group">
+                        <input 
+                            type="text" 
+                            id="editar-passagem-leito" 
+                            placeholder="Leito"
+                            required
+                        >
+                    </div>
+                    <div class="form-group">
+                        <input 
+                            type="text" 
+                            id="editar-passagem-atendimento" 
+                            placeholder="Atendimento (ID)"
+                            required
+                        >
+                    </div>
+                    <div class="form-group">
                         <textarea 
                             id="input-editar-passagem-texto" 
                             placeholder="Descreva a pendência..." 
                             rows="4"
                             required
                         ></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Gravidade:</label>
-                        <div class="gravidade-opcoes">
-                            <label class="gravidade-opcao">
-                                <input type="radio" name="gravidade-editar" value="alta" required>
-                                <span class="alta">Alta</span>
-                            </label>
-                            <label class="gravidade-opcao">
-                                <input type="radio" name="gravidade-editar" value="media">
-                                <span class="media">Média</span>
-                            </label>
-                            <label class="gravidade-opcao">
-                                <input type="radio" name="gravidade-editar" value="baixa">
-                                <span class="baixa">Baixa</span>
-                            </label>
-                        </div>
                     </div>
                     <div class="modal-botoes">
                         <button type="button" class="btn-cancelar btn-cancelar-editar-passagem">Cancelar</button>
@@ -228,7 +298,7 @@
                 <p id="confirmacao-mensagem"></p>
                 <div class="modal-botoes">
                     <button type="button" class="btn-cancelar" id="btn-cancelar-confirmacao">Cancelar</button>
-                    <button type="button" class="btn-salvar" id="btn-confirmar-ok">OK</button>
+                    <button type="button" class="btn-salvar" id="btn-confirmar-ok">Sim</button>
                 </div>
             </div>
         </div>
