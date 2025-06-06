@@ -13,13 +13,19 @@
     --warning-light: rgba(243, 156, 18, 0.08);
     --danger-light: rgba(231, 76, 60, 0.08);
     --floating-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    
+    /* Paleta de tipos de pendência */
+    --transferencia: #3498db;
+    --checagem-exame: #9b59b6;
+    --reavaliacao: #e67e22;
+    --outros: #7f8c8d;
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', 'Roboto', sans-serif;
+    font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
 }
 
 body {
@@ -28,6 +34,8 @@ body {
     line-height: 1.5;
     padding: 0;
     font-weight: 400;
+    font-size: 15px;
+    overflow-y: auto;
 }
 
 /* ===== APP HEADER ===== */
@@ -46,12 +54,11 @@ body {
 .logo-container {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
 }
 
 .app-header h1 {
-    font-size: 1.5rem;
-    font-weight: 500;
+    font-size: 1.8rem;
+    font-weight: 600;
     color: var(--primary);
     letter-spacing: -0.5px;
 }
@@ -145,11 +152,13 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    font-size: 0.95rem;
 }
 
 .aba.ativa {
     color: var(--primary);
     border-bottom: 2px solid var(--primary);
+    font-weight: 600;
 }
 
 .contador {
@@ -274,41 +283,49 @@ body {
     border-left: none !important;
 }
 
-.passagem-card .gravidade-tag {
+.passagem-card .tipo-tag {
     display: inline-block;
     padding: 0.15rem 0.5rem;
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 500;
     margin-left: 0.4rem;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text);
 }
 
-.passagem-card.alta .gravidade-tag {
-    background: var(--danger-light);
-    color: var(--danger);
+.passagem-card.transferencia .tipo-tag {
+    background: rgba(52, 152, 219, 0.1);
+    color: var(--transferencia);
 }
 
-.passagem-card.media .gravidade-tag {
-    background: var(--warning-light);
-    color: var(--warning);
+.passagem-card.checagem-exame .tipo-tag {
+    background: rgba(155, 89, 182, 0.1);
+    color: var(--checagem-exame);
 }
 
-.passagem-card.baixa .gravidade-tag {
-    background: var(--success-light);
-    color: var(--success);
+.passagem-card.reavaliacao .tipo-tag {
+    background: rgba(230, 126, 34, 0.1);
+    color: var(--reavaliacao);
+}
+
+.passagem-card.outros .tipo-tag {
+    background: rgba(127, 140, 141, 0.1);
+    color: var(--outros);
 }
 
 .passagem-resolvida {
     opacity: 0.7;
 }
 
-.passagem-resolvida .gravidade-tag {
+.passagem-resolvida .tipo-tag {
     background: rgba(127, 140, 141, 0.05) !important;
     color: var(--text-light) !important;
 }
 
 .controles-passagem {
     display: flex;
+    align-items: center;
     gap: 0.6rem;
 }
 
@@ -357,15 +374,17 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    overflow-y: auto;
 }
 
 .modal-content {
     background: white;
     border-radius: 6px;
     width: 90%;
-    max-width: 480px;
+    max-width: 400px;
     box-shadow: var(--floating-shadow);
     overflow: hidden;
+    margin: 1rem;
 }
 
 .modal-content h2 {
@@ -379,7 +398,7 @@ body {
 }
 
 .form-group {
-    padding: 0.9rem 1.3rem;
+    padding: 0.6rem 1.3rem;
 }
 
 .form-group input,
@@ -434,22 +453,24 @@ body {
     background: #1a2530;
 }
 
-/* Gravidade */
-.gravidade-opcoes {
+/* Tipo */
+.tipo-opcoes {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.4rem;
-    margin-top: 0.7rem;
+    margin-top: 0.5rem;
 }
 
-.gravidade-opcao {
+.tipo-opcao {
     flex: 1;
+    min-width: 100px;
 }
 
-.gravidade-opcao input {
+.tipo-opcao input {
     display: none;
 }
 
-.gravidade-opcao span {
+.tipo-opcao span {
     display: block;
     text-align: center;
     padding: 0.5rem;
@@ -462,19 +483,7 @@ body {
     font-weight: 400;
 }
 
-.gravidade-opcao .alta {
-    color: var(--danger);
-}
-
-.gravidade-opcao .media {
-    color: var(--warning);
-}
-
-.gravidade-opcao .baixa {
-    color: var(--success);
-}
-
-.gravidade-opcao input:checked + span {
+.tipo-opcao input:checked + span {
     background: var(--primary);
     color: white !important;
     border-color: var(--primary);
@@ -670,18 +679,6 @@ body {
     border-left: 3px solid;
 }
 
-.passagem-item.alta { 
-    border-left-color: var(--danger); 
-}
-
-.passagem-item.media { 
-    border-left-color: var(--warning); 
-}
-
-.passagem-item.baixa { 
-    border-left-color: var(--success); 
-}
-
 /* ===== DASHBOARD DE TRANSIÇÃO ===== */
 .dashboard-transicao {
     display: flex;
@@ -714,6 +711,7 @@ body {
 #modal-confirmacao p {
     padding: 0 1.3rem;
     margin-bottom: 1.3rem;
+    line-height: 1.6;
 }
 
 /* Responsividade */
@@ -732,6 +730,10 @@ body {
     .floating-container {
         bottom: 1rem;
     }
+    
+    .tipo-opcao {
+        min-width: 100px;
+    }
 }
 
 .sem-registros {
@@ -745,4 +747,39 @@ body {
 .plantao-card .cabecalho-registro h3 {
     font-size: 0.95rem;
     flex: 1;
+}
+
+/* Estilo para campos de paciente/leito/atendimento */
+.info-paciente {
+    margin-bottom: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.info-paciente span {
+    background: rgba(0, 0, 0, 0.03);
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+}
+
+/* Remover rótulos nos cards de pendência */
+.passagem-card .info-paciente span:not(:last-child)::after {
+    content: none;
+}
+
+.passagem-card .info-paciente span {
+    margin-right: 0.5rem;
+}
+
+/* Modal de nova pendência com rolagem */
+#modal-nova-passagem .modal-content {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* Resumo do plantão no histórico */
+.resumo-plantao span {
+    margin-right: 1rem;
 }
