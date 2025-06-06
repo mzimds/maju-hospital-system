@@ -48,9 +48,9 @@ class PlantaoManager {
             inputBuscaHistorico: document.getElementById('input-busca-historico'),
             inputBuscaPassagens: document.getElementById('input-busca-passagens'),
             sugestoesBusca: document.getElementById('sugestoes-busca'),
-            barraPesquisaPlantao: document.getElementById('barra-pesquisa-plantao'),
-            abaPlantaoAtivo: document.getElementById('aba-plantao-ativo'),
-            abaPassagens: document.getElementById('aba-passagens'),
+            barraPesquisaPlantao: document.getElementById('barra-pesquisa-intercorrencia'),
+            abaIntercorrencia: document.getElementById('aba-intercorrencia'),
+            abaPendencia: document.getElementById('aba-pendencia'),
             passagensContainer: document.getElementById('passagens-container'),
             contadorPassagens: document.getElementById('contador-passagens'),
             modalNovaPassagem: document.getElementById('modal-nova-passagem'),
@@ -73,9 +73,9 @@ class PlantaoManager {
         // Botão flutuante principal com comportamento contextual
         this.elements.btnFlutuantePrincipal.addEventListener('click', () => {
             const abaAtiva = document.querySelector('.aba.ativa').dataset.aba;
-            if (abaAtiva === 'plantao') {
+            if (abaAtiva === 'intercorrencia') {
                 this.abrirModal();
-            } else if (abaAtiva === 'passagens') {
+            } else if (abaAtiva === 'pendencia') {
                 this.abrirModalNovaPassagem();
             }
         });
@@ -151,6 +151,15 @@ class PlantaoManager {
             if (e.target.classList.contains('btn-acrescentar')) {
                 const registroId = parseInt(e.target.dataset.id);
                 this.registroSelecionado = this.plantaoAtivo.registros.find(r => r.id === registroId);
+                this.abrirModalAcrescentar();
+            }
+        });
+
+        // Evento para adicionar informação a pendência
+        this.elements.passagensContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn-acrescentar-passagem')) {
+                const passagemId = e.target.dataset.id;
+                this.passagemSelecionada = this.plantaoAtivo.passagens.find(p => p.id === passagemId);
                 this.abrirModalAcrescentar();
             }
         });
@@ -245,9 +254,9 @@ class PlantaoManager {
             this.elements.btnEncerrar.style.color = '#e74c3c';
             
             this.elements.barraPesquisaPlantao.style.display = 'block';
-            this.elements.abaPlantaoAtivo.style.display = 'flex';
-            this.elements.abaPassagens.style.display = 'flex';
-            this.mostrarAba('plantao');
+            this.elements.abaIntercorrencia.style.display = 'flex';
+            this.elements.abaPendencia.style.display = 'flex';
+            this.mostrarAba('intercorrencia');
         } else {
             this.elements.statusElement.classList.remove('ativo');
             this.elements.statusElement.classList.add('inativo');
@@ -256,9 +265,9 @@ class PlantaoManager {
             this.elements.btnEncerrar.style.color = '#2ecc71';
             
             this.elements.barraPesquisaPlantao.style.display = 'none';
-            this.elements.abaPlantaoAtivo.style.display = 'none';
-            this.elements.abaPassagens.style.display = 'flex';
-            this.mostrarAba('passagens');
+            this.elements.abaIntercorrencia.style.display = 'none';
+            this.elements.abaPendencia.style.display = 'flex';
+            this.mostrarAba('pendencia');
         }
         this.configurarBotaoFlutuante();
         this.atualizarContadorPassagens();
@@ -443,13 +452,16 @@ class PlantaoManager {
     
     abrirEditarPassagem(passagem) {
         this.passagemSelecionada = passagem;
+        
+        // Preencher campos
+        document.getElementById('editar-passagem-paciente').value = passagem.paciente || '';
+        document.getElementById('editar-passagem-leito').value = passagem.leito || '';
+        document.getElementById('editar-passagem-atendimento').value = passagem.atendimento || '';
         this.elements.inputEditarPassagemTexto.value = passagem.texto;
         
-        // Marcar o radio correto
-        document.querySelectorAll('input[name="gravidade-editar"]').forEach(radio => {
-            if (radio.value === passagem.gravidade) {
-                radio.checked = true;
-            }
+        // Marcar o tipo correto
+        document.querySelectorAll('input[name="tipo-editar"]').forEach(radio => {
+            radio.checked = (radio.value === passagem.tipo);
         });
         
         this.elements.modalEditarPassagem.style.display = 'flex';
@@ -483,11 +495,13 @@ class PlantaoManager {
         e.preventDefault();
         
         const nomePaciente = document.getElementById('paciente').value.trim();
+        const leito = document.getElementById('leito').value.trim();
+        const atendimento = document.getElementById('atendimento').value.trim();
         const descricao = document.getElementById('ocorrencia').value.trim();
         
         // Verificar duplicidade
         const pacienteExistente = this.plantaoAtivo.registros.find(
-            registro => registro.paciente.toLowerCase() === nomePaciente.toLowerCase()
+            registro => registro.atendimento.toLowerCase() === atendimento.toLowerCase()
         );
         
         if (pacienteExistente) {
@@ -517,6 +531,8 @@ class PlantaoManager {
         const novoRegistro = {
             id: Date.now(),
             paciente: nomePaciente,
+            leito: leito,
+            atendimento: atendimento,
             historico: [{
                 texto: descricao,
                 data: new Date().toLocaleString('pt-BR'),
@@ -544,17 +560,24 @@ class PlantaoManager {
         const texto = this.elements.inputPassagemTexto.value.trim();
         if (!texto) return;
         
-        const gravidade = document.querySelector('input[name="gravidade"]:checked').value;
+        const tipo = document.querySelector('input[name="tipo"]:checked').value;
+        const paciente = document.getElementById('passagem-paciente').value.trim();
+        const leito = document.getElementById('passagem-leito').value.trim();
+        const atendimento = document.getElementById('passagem-atendimento').value.trim();
         
         const novaPassagem = {
             id: `pa-${Date.now()}`,
-            texto,
+            tipo: tipo,
+            paciente: paciente,
+            leito: leito,
+            atendimento: atendimento,
+            texto: texto,
             criadoPor: "Enf. Responsável",
             dataCriacao: new Date().toISOString(),
             resolvido: false,
             dataResolucao: null,
             resolvidoPor: null,
-            gravidade
+            historico: []
         };
         
         this.plantaoAtivo.passagens.unshift(novaPassagem);
@@ -565,12 +588,18 @@ class PlantaoManager {
 
     salvarEdicaoPassagem() {
         const texto = this.elements.inputEditarPassagemTexto.value.trim();
+        const paciente = document.getElementById('editar-passagem-paciente').value.trim();
+        const leito = document.getElementById('editar-passagem-leito').value.trim();
+        const atendimento = document.getElementById('editar-passagem-atendimento').value.trim();
+        const tipo = document.querySelector('input[name="tipo-editar"]:checked').value;
+        
         if (!texto || !this.passagemSelecionada) return;
         
-        const gravidade = document.querySelector('input[name="gravidade-editar"]:checked').value;
-        
         this.passagemSelecionada.texto = texto;
-        this.passagemSelecionada.gravidade = gravidade;
+        this.passagemSelecionada.paciente = paciente;
+        this.passagemSelecionada.leito = leito;
+        this.passagemSelecionada.atendimento = atendimento;
+        this.passagemSelecionada.tipo = tipo;
         
         this.salvarLocalStorage();
         this.fecharModalEditarPassagem();
@@ -580,15 +609,19 @@ class PlantaoManager {
     salvarAcrescimo() {
         const texto = document.getElementById('input-acrescentar').value.trim();
         
-        if (texto && this.registroSelecionado) {
-            this.registroSelecionado.historico.unshift({
+        if (texto && (this.registroSelecionado || this.passagemSelecionada)) {
+            const novaEntrada = {
                 texto,
                 data: new Date().toLocaleString('pt-BR'),
                 autor: "Enf. Responsável"
-            });
+            };
             
-            // Atualizar timestamp e reordenar
-            this.registroSelecionado.ultimaAtualizacao = new Date().toISOString();
+            if (this.registroSelecionado) {
+                this.registroSelecionado.historico.unshift(novaEntrada);
+                this.registroSelecionado.ultimaAtualizacao = new Date().toISOString();
+            } else if (this.passagemSelecionada) {
+                this.passagemSelecionada.historico.unshift(novaEntrada);
+            }
             
             this.salvarLocalStorage();
             this.atualizarInterface();
@@ -702,7 +735,7 @@ class PlantaoManager {
         
         if (abaNome === 'historico') {
             this.carregarHistoricoPlantao();
-        } else if (abaNome === 'passagens') {
+        } else if (abaNome === 'pendencia') {
             this.carregarPassagens();
         }
         this.configurarBotaoFlutuante();
@@ -712,19 +745,10 @@ class PlantaoManager {
         this.elements.passagensContainer.innerHTML = '';
         this.atualizarContadorPassagens();
         
-        // Ordenar pendências: não resolvidas por gravidade (alta > média > baixa) e depois resolvidas
-        const passagensOrdenadas = [...this.plantaoAtivo.passagens].sort((a, b) => {
-            // Se ambos não resolvidos, ordenar por gravidade
-            if (!a.resolvido && !b.resolvido) {
-                const prioridade = { alta: 3, media: 2, baixa: 1 };
-                return prioridade[b.gravidade] - prioridade[a.gravidade];
-            }
-            // Se um resolvido e o outro não, o não resolvido vem primeiro
-            if (a.resolvido && !b.resolvido) return 1;
-            if (!a.resolvido && b.resolvido) return -1;
-            // Se ambos resolvidos, manter ordem de criação
-            return new Date(b.dataCriacao) - new Date(a.dataCriacao);
-        });
+        // Ordenar pendências por data (mais recente primeiro)
+        const passagensOrdenadas = [...this.plantaoAtivo.passagens].sort((a, b) => 
+            new Date(b.dataCriacao) - new Date(a.dataCriacao)
+        );
         
         if (passagensOrdenadas.length === 0) {
             const semRegistros = document.createElement('div');
@@ -736,24 +760,46 @@ class PlantaoManager {
         
         passagensOrdenadas.forEach(passagem => {
             const card = document.createElement('div');
-            card.className = `passagem-card ${passagem.gravidade} ${passagem.resolvido ? 'passagem-resolvida' : ''}`;
+            card.className = `passagem-card ${passagem.tipo} ${passagem.resolvido ? 'passagem-resolvida' : ''}`;
             card.dataset.id = passagem.id;
+            
+            // Informações do paciente (sem rótulos)
+            const dadosPaciente = [];
+            if (passagem.paciente) dadosPaciente.push(`<span>${passagem.paciente}</span>`);
+            if (passagem.leito) dadosPaciente.push(`<span>${passagem.leito}</span>`);
+            if (passagem.atendimento) dadosPaciente.push(`<span>${passagem.atendimento}</span>`);
+            
+            const infoPaciente = dadosPaciente.length 
+                ? `<div class="info-paciente">${dadosPaciente.join('')}</div>`
+                : '';
             
             card.innerHTML = `
                 <div class="cabecalho-registro">
-                    <h3><span class="gravidade-tag">${passagem.gravidade.toUpperCase()}</span></h3>
-                    <div>
+                    <h3><span class="tipo-tag">${this.formatarTipo(passagem.tipo)}</span></h3>
+                    <div class="controles-passagem">
                         ${!passagem.resolvido ? `
                             <button class="btn-editar">Editar</button>
                             <button class="btn-resolver">Marcar como Resolvido</button>
                         ` : ''}
+                        <button 
+                            class="btn-acrescentar btn-acrescentar-passagem" 
+                            data-id="${passagem.id}"
+                            title="Acrescentar informação"
+                        >+</button>
                     </div>
                 </div>
+                ${infoPaciente}
                 <div class="historico-registro">
                     <div class="entrada-registro">
                         <p>${passagem.texto}</p>
                         <small>Criado por: ${passagem.criadoPor} - ${new Date(passagem.dataCriacao).toLocaleString('pt-BR')}</small>
                     </div>
+                    ${passagem.historico.map(entry => `
+                        <div class="entrada-registro">
+                            <p>${entry.texto}</p>
+                            <small>${entry.autor} - ${entry.data}</small>
+                        </div>
+                    `).join('')}
                     ${passagem.resolvido ? `
                         <div class="entrada-registro">
                             <p><strong>RESOLVIDO</strong></p>
@@ -783,6 +829,16 @@ class PlantaoManager {
         this.filtrarPassagens();
     }
 
+    formatarTipo(tipo) {
+        const tipos = {
+            'transferencia': 'Transferência',
+            'checagem-exame': 'Checagem de exame',
+            'reavaliacao': 'Reavaliação',
+            'outros': 'Outros'
+        };
+        return tipos[tipo] || tipo;
+    }
+
     carregarHistoricoPlantao() {
         const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 
@@ -801,8 +857,8 @@ class PlantaoManager {
                         <div class="duracao-plantao">${plantao.duracao}</div>
                     </div>
                     <div class="resumo-plantao">
-                        <small>${plantao.registros.length} registros</small>
-                        <small>${plantao.passagens.length} pendências</small>
+                        <span>Registros: ${plantao.registros.length}</span>
+                        <span>Pendências: ${plantao.passagens.length}</span>
                     </div>
                     <div class="ocorrencias-expandidas" style="display: none;">
                         <div class="plantao-detalhes">
@@ -820,6 +876,10 @@ class PlantaoManager {
                             ${plantao.registros.map(registro => `
                                 <div class="ocorrencia-item">
                                     <p><strong>${registro.paciente}</strong></p>
+                                    <div class="info-paciente">
+                                        <span>${registro.leito}</span>
+                                        <span>${registro.atendimento}</span>
+                                    </div>
                                     ${registro.historico.map(entry => `
                                         <p>${entry.texto}</p>
                                         <small>${entry.autor} - ${entry.data}</small>
@@ -831,9 +891,14 @@ class PlantaoManager {
                             <h4>Pendências</h4>
                             ${plantao.passagens.length > 0 ? 
                                 plantao.passagens.map(passagem => `
-                                    <div class="passagem-card ${passagem.gravidade} ${passagem.resolvido ? 'passagem-resolvida' : ''}">
+                                    <div class="passagem-card ${passagem.tipo} ${passagem.resolvido ? 'passagem-resolvida' : ''}">
                                         <div class="cabecalho-registro">
-                                            <h3><span class="gravidade-tag">${passagem.gravidade.toUpperCase()}</span></h3>
+                                            <h3><span class="tipo-tag">${this.formatarTipo(passagem.tipo)}</span></h3>
+                                        </div>
+                                        <div class="info-paciente">
+                                            ${passagem.paciente ? `<span>${passagem.paciente}</span>` : ''}
+                                            ${passagem.leito ? `<span>${passagem.leito}</span>` : ''}
+                                            ${passagem.atendimento ? `<span>${passagem.atendimento}</span>` : ''}
                                         </div>
                                         <div class="historico-registro">
                                             <div class="entrada-registro">
@@ -895,6 +960,10 @@ class PlantaoManager {
                                 data-id="${registro.id}"
                                 title="Acrescentar informação"
                             >+</button>
+                        </div>
+                        <div class="info-paciente">
+                            <span>${registro.leito}</span>
+                            <span>${registro.atendimento}</span>
                         </div>
                         <div class="historico-registro">
                             ${entradasVisiveis.map(entry => `
