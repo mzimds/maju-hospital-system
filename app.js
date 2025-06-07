@@ -25,14 +25,11 @@ class PlantaoManager {
         this.atualizarHorario();
         this.atualizarStatusPlantao();
         this.verificarAtividadeSemPlantao();
-        this.agendarConfirmacaoPosJornada();
-        this.verificarSugestaoInicio();
         this.iniciarVerificacaoAutomatica();
     }
 
     initElements() {
         this.elements = {
-            btnEncerrar: document.getElementById('btn-encerrar'),
             modal: document.getElementById('modal'),
             form: document.getElementById('form'),
             registrosContainer: document.getElementById('registros'),
@@ -42,8 +39,6 @@ class PlantaoManager {
             statusTexto: document.getElementById('status-texto'),
             modalAcrescentar: document.getElementById('modal-acrescentar'),
             inputAcrescentar: document.getElementById('input-acrescentar'),
-            modalEncerrar: document.getElementById('modal-encerrar'),
-            formEncerrar: document.getElementById('form-encerrar'),
             abas: document.querySelectorAll('.aba'),
             conteudoAbas: document.querySelectorAll('.conteudo-aba'),
             inputBusca: document.getElementById('input-busca'),
@@ -69,7 +64,6 @@ class PlantaoManager {
             btnCancelarConfirmacao: document.getElementById('btn-cancelar-confirmacao'),
             btnConfirmarOk: document.getElementById('btn-confirmar-ok'),
             zonaCinzaAviso: document.getElementById('zona-cinza-aviso'),
-            plantaoPeriodo: document.getElementById('plantao-periodo'),
             plantaoTurno: document.getElementById('plantao-turno')
         };
     }
@@ -85,15 +79,6 @@ class PlantaoManager {
             }
         });
         
-        // Botão encerrar/iniciar plantão
-        this.elements.btnEncerrar.addEventListener('click', () => {
-            if (this.plantaoAtivo.ativo) {
-                this.abrirModalEncerrar();
-            } else {
-                this.iniciarPlantao();
-            }
-        });
-
         // Abas
         this.elements.abas.forEach(aba => {
             aba.addEventListener('click', () => {
@@ -105,12 +90,6 @@ class PlantaoManager {
 
         // Formulário de novo registro
         this.elements.form.addEventListener('submit', (e) => this.salvarRegistro(e));
-        
-        // Formulário de encerramento
-        this.elements.formEncerrar.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.encerrarPlantao();
-        });
         
         // Formulário de nova pendência
         this.elements.formNovaPassagem.addEventListener('submit', (e) => {
@@ -128,12 +107,6 @@ class PlantaoManager {
         this.elements.modal.addEventListener('click', (e) => {
             if(e.target.classList.contains('btn-cancelar') || e.target === this.elements.modal) {
                 this.fecharModal();
-            }
-        });
-
-        this.elements.modalEncerrar.addEventListener('click', (e) => {
-            if(e.target.classList.contains('btn-cancelar') || e.target === this.elements.modalEncerrar) {
-                this.fecharModalEncerrar();
             }
         });
 
@@ -379,8 +352,6 @@ class PlantaoManager {
             this.elements.statusElement.classList.remove('inativo');
             this.elements.statusElement.classList.add('ativo');
             this.elements.statusTexto.textContent = 'Plantão Ativo';
-            this.elements.btnEncerrar.textContent = 'Encerrar';
-            this.elements.btnEncerrar.style.color = '#e74c3c';
             
             this.elements.barraPesquisaPlantao.style.display = 'block';
             this.elements.abaIntercorrencia.style.display = 'flex';
@@ -392,22 +363,18 @@ class PlantaoManager {
             this.elements.plantaoTurno.textContent = `Plantão ${turno.tipo} (${turno.periodo})`;
             
             const inicio = new Date(this.plantaoAtivo.dataInicio);
-            const formatoData = { 
-                day: '2-digit', 
-                month: '2-digit', 
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            };
-            
-            this.elements.plantaoPeriodo.textContent = 
-                `${inicio.toLocaleDateString('pt-BR', formatoData)} - Ativo`;
+            this.elements.horarioInicio.textContent = 
+                inicio.toLocaleString('pt-BR', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
         } else {
             this.elements.statusElement.classList.remove('ativo');
             this.elements.statusElement.classList.add('inativo');
             this.elements.statusTexto.textContent = 'Plantão Inativo';
-            this.elements.btnEncerrar.textContent = 'Iniciar';
-            this.elements.btnEncerrar.style.color = '#2ecc71';
             
             this.elements.barraPesquisaPlantao.style.display = 'none';
             this.elements.abaIntercorrencia.style.display = 'none';
@@ -415,7 +382,7 @@ class PlantaoManager {
             this.mostrarAba('pendencia');
 
             this.elements.plantaoTurno.textContent = "Plantão Inativo";
-            this.elements.plantaoPeriodo.textContent = "";
+            this.elements.horarioInicio.textContent = "";
         }
         this.configurarBotaoFlutuante();
         this.atualizarContadorPassagens();
@@ -425,161 +392,6 @@ class PlantaoManager {
         const emAberto = this.plantaoAtivo.passagens.filter(p => !p.resolvido).length;
         this.elements.contadorPassagens.textContent = emAberto;
         this.elements.contadorPassagens.style.display = emAberto > 0 ? 'inline' : 'none';
-    }
-
-    async abrirModalEncerrar() {
-        const dentroHorario = this.verificarHorarioAtivo();
-        const temPendenciasAbertas = this.plantaoAtivo.passagens.some(p => !p.resolvido);
-        const temRegistrosCriticos = this.plantaoAtivo.registros.some(r => 
-            r.historico.some(entry => 
-                entry.texto.toLowerCase().includes('crítico') || 
-                entry.texto.toLowerCase().includes('emergência')
-            )
-        );
-        
-        // Se estiver dentro do horário ativo, exibir alerta adicional
-        if (dentroHorario) {
-            if (!await this.exibirConfirmacao('Você está encerrando o plantão antes do horário previsto. Tem certeza que deseja continuar?', 'Atenção')) {
-                return;
-            }
-        }
-        
-        if (!temPendenciasAbertas && !temRegistrosCriticos) {
-            if (await this.exibirConfirmacao('Deseja encerrar sem relatório?', 'Encerrar plantão')) {
-                await this.encerrarPlantaoRapido();
-                return;
-            }
-        }
-        this.elements.modalEncerrar.style.display = 'flex';
-    }
-
-    async encerrarPlantaoRapido() {
-        const dentroHorario = this.verificarHorarioAtivo();
-        if (dentroHorario) {
-            if (!await this.exibirConfirmacao('Você está encerrando o plantão antes do horário previsto. Tem certeza que deseja continuar?', 'Atenção')) {
-                return;
-            }
-        }
-
-        const dataTermino = new Date();
-        const dataInicio = new Date(this.plantaoAtivo.dataInicio);
-        const diffMinutos = (dataTermino - dataInicio) / (1000 * 60);
-
-        this.plantaoAtivo.ativo = false;
-        
-        // Filtrar pendências não resolvidas para transferir
-        const passagensNaoResolvidas = this.plantaoAtivo.passagens.filter(p => !p.resolvido);
-        
-        const plantaoEncerrado = {
-            id: this.plantaoAtivo.plantaoId,
-            setor: "UTI-01",
-            turno: this.plantaoAtivo.turno,
-            inicio: dataInicio.toISOString(),
-            termino: dataTermino.toISOString(),
-            duracao: this.calcularDuracao(dataInicio, dataTermino),
-            responsavel: "Enf. Responsável",
-            registros: [...this.plantaoAtivo.registros],
-            passagens: [...passagensNaoResolvidas],
-            relatorioFinal: "Plantão encerrado sem relatório (modo rápido)"
-        };
-        
-        // Se o plantão durou mais de 5 minutos, adiciona ao histórico
-        if (diffMinutos > 5) {
-            this.plantaoAtivo.historico.unshift(plantaoEncerrado);
-        }
-        
-        // Limpa registros e mantém pendências não resolvidas
-        this.plantaoAtivo.registros = [];
-        this.plantaoAtivo.passagens = passagensNaoResolvidas;
-        
-        // Gera novo ID para o próximo plantão
-        this.plantaoAtivo.plantaoId = `plantao-${Date.now()}`;
-        
-        this.salvarLocalStorage();
-        this.atualizarInterface();
-        this.atualizarStatusPlantao();
-    }
-
-    async encerrarPlantao() {
-        const dentroHorario = this.verificarHorarioAtivo();
-        if (dentroHorario) {
-            if (!await this.exibirConfirmacao('Você está encerrando o plantão antes do horário previsto. Tem certeza que deseja continuar?', 'Atenção')) {
-                return;
-            }
-        }
-
-        const dataTermino = new Date();
-        const dataInicio = new Date(this.plantaoAtivo.dataInicio);
-        const diffMinutos = (dataTermino - dataInicio) / (1000 * 60);
-        const relatorio = document.getElementById('relatorio-encerramento').value.trim();
-        
-        this.plantaoAtivo.ativo = false;
-        
-        // Filtrar pendências não resolvidas para transferir
-        const passagensNaoResolvidas = this.plantaoAtivo.passagens.filter(p => !p.resolvido);
-        
-        const plantaoEncerrado = {
-            id: this.plantaoAtivo.plantaoId,
-            setor: "UTI-01",
-            turno: this.plantaoAtivo.turno,
-            inicio: dataInicio.toISOString(),
-            termino: dataTermino.toISOString(),
-            duracao: this.calcularDuracao(dataInicio, dataTermino),
-            responsavel: "Enf. Responsável",
-            registros: [...this.plantaoAtivo.registros],
-            passagens: [...passagensNaoResolvidas],
-            relatorioFinal: relatorio || "Nenhum relatório fornecido"
-        };
-        
-        // Se o plantão durou mais de 5 minutos, adiciona ao histórico
-        if (diffMinutos > 5) {
-            this.plantaoAtivo.historico.unshift(plantaoEncerrado);
-        }
-        
-        // Limpa registros e mantém pendências não resolvidas
-        this.plantaoAtivo.registros = [];
-        this.plantaoAtivo.passagens = passagensNaoResolvidas;
-        
-        // Gera novo ID para o próximo plantão
-        this.plantaoAtivo.plantaoId = `plantao-${Date.now()}`;
-        
-        this.salvarLocalStorage();
-        this.atualizarInterface();
-        this.fecharModalEncerrar();
-        
-        // Mostrar dashboard após pequeno delay
-        setTimeout(() => {
-            this.mostrarDashboardTransicao(plantaoEncerrado);
-        }, 300);
-    }
-
-    calcularDuracao(inicio, termino) {
-        const diffMs = termino - inicio;
-        const diffMins = Math.floor(diffMs / 60000);
-        const hours = Math.floor(diffMins / 60);
-        const minutes = diffMins % 60;
-        return `${hours}h${minutes.toString().padStart(2, '0')}m`;
-    }
-
-    iniciarPlantao() {
-        // Verificar se existe plantão anterior não encerrado
-        const plantaoAnterior = this.plantaoAtivo.historico[0];
-        
-        if (plantaoAnterior && !plantaoAnterior.termino) {
-            const agora = new Date();
-            plantaoAnterior.termino = agora.toISOString();
-            plantaoAnterior.duracao = this.calcularDuracao(
-                new Date(plantaoAnterior.inicio), 
-                agora
-            );
-        }
-
-        const turno = this.determinarTurnoAtual();
-        this.plantaoAtivo.ativo = true;
-        this.plantaoAtivo.dataInicio = new Date().toISOString();
-        this.plantaoAtivo.turno = turno.tipo;
-        this.salvarLocalStorage();
-        this.atualizarStatusPlantao();
     }
 
     salvarLocalStorage() {
@@ -634,11 +446,6 @@ class PlantaoManager {
         this.elements.inputAcrescentar.value = '';
     }
 
-    fecharModalEncerrar() {
-        this.elements.modalEncerrar.style.display = 'none';
-        document.getElementById('relatorio-encerramento').value = '';
-    }
-
     fecharModal() {
         this.elements.modal.style.display = 'none';
         this.elements.form.reset();
@@ -667,14 +474,14 @@ class PlantaoManager {
         if (!this.plantaoAtivo.ativo) {
             if (this.verificarHorarioAtivo()) {
                 if (await this.exibirConfirmacao('Plantão encerrado mas dentro do horário ativo. Deseja reabrir o plantão?', 'Reabrir Plantão')) {
-                    this.iniciarPlantao();
+                    this.iniciarPlantaoAutomatico();
                 } else {
                     return;
                 }
             } else {
                 const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                 if (await this.exibirConfirmacao(`Plantão iniciado às ${horaAtual}. Está correto?`, 'Iniciar Plantão')) {
-                    this.iniciarPlantao();
+                    this.iniciarPlantaoAutomatico();
                 } else {
                     return; // Usuário cancelou
                 }
@@ -704,7 +511,7 @@ class PlantaoManager {
     async salvarNovaPassagem() {
         if (!this.plantaoAtivo.ativo) {
             if (await this.exibirConfirmacao('Plantão ainda não iniciado. Deseja iniciar agora?', 'Iniciar Plantão')) {
-                this.iniciarPlantao();
+                this.iniciarPlantaoAutomatico();
             } else {
                 return;
             }
@@ -932,7 +739,7 @@ class PlantaoManager {
                     <div class="controles-passagem">
                         ${!passagem.resolvido ? `
                             <button class="btn-editar">Editar</button>
-                            <button class="btn-resolver">Marcar como Resolvido</button>
+                            <button class="btn-resolver">Resolver</button>
                         ` : ''}
                         <button 
                             class="btn-acrescentar btn-acrescentar-passagem" 
@@ -1181,68 +988,11 @@ class PlantaoManager {
                 this.exibirConfirmacao(`Você esqueceu de iniciar seu plantão? Detectamos atividade desde ${new Date().toLocaleTimeString('pt-BR')}. Deseja iniciar agora?`, 'Plantão não iniciado')
                     .then(confirmado => {
                         if (confirmado) {
-                            this.iniciarPlantao();
+                            this.iniciarPlantaoAutomatico();
                         }
                     });
             }
         }, 30 * 60 * 1000); // 30 minutos
-    }
-
-    agendarConfirmacaoPosJornada() {
-        if (!this.plantaoAtivo.ativo) return;
-
-        const TERMINO_PREVISTO = 12 * 60 * 60 * 1000; // 12 horas
-        const inicio = new Date(this.plantaoAtivo.dataInicio);
-        const terminoPrevisto = new Date(inicio.getTime() + TERMINO_PREVISTO);
-        
-        setTimeout(() => {
-            if (this.plantaoAtivo.ativo) {
-                this.exibirConfirmacao('Você ainda está em plantão?', 'Confirmação de plantão')
-                    .then(resposta => {
-                        if (!resposta) {
-                            this.abrirModalEncerrar();
-                        }
-                    });
-            }
-        }, TERMINO_PREVISTO + (30 * 60 * 1000)); // 30 min após término
-    }
-
-    mostrarDashboardTransicao(plantao) {
-        const inicioDate = new Date(plantao.inicio);
-        const dataFormatada = inicioDate.toLocaleDateString('pt-BR');
-        const periodo = inicioDate.getHours() < 12 ? 'A (07:00 - 19:00)' : 'B (19:00 - 07:00)';
-
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h2>Plantão ${periodo} - ${dataFormatada} - Encerrado</h2>
-                <div class="dashboard-transicao">
-                    <div class="dash-item">
-                        <div class="dash-valor">${plantao.registros.length}</div>
-                        <div class="dash-label">Registros</div>
-                    </div>
-                    <div class="dash-item">
-                        <div class="dash-valor">${plantao.passagens.length}</div>
-                        <div class="dash-label">Pendências</div>
-                    </div>
-                    <div class="dash-item">
-                        <div class="dash-valor">${plantao.duracao}</div>
-                        <div class="dash-label">Duração</div>
-                    </div>
-                </div>
-                <div class="modal-botoes">
-                    <button id="btn-ok" class="btn-salvar">OK</button>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        modal.style.display = 'flex';
-        
-        document.getElementById('btn-ok').addEventListener('click', () => {
-            document.body.removeChild(modal);
-        });
     }
 
     // Verifica se está dentro do horário do plantão (07:00 às 19:00)
@@ -1251,18 +1001,6 @@ class PlantaoManager {
         const horaAtual = agora.getHours();
         return horaAtual >= this.HORARIO_INICIO_PLANTAO_A && 
                horaAtual < this.HORARIO_FIM_PLANTAO_A;
-    }
-
-    // Verifica periodicamente se está no horário do plantão e sugere iniciar
-    verificarSugestaoInicio() {
-        if (!this.plantaoAtivo.ativo && this.verificarHorarioAtivo()) {
-            this.exibirConfirmacao('Está dentro do horário do plantão. Deseja iniciar agora?', 'Iniciar Plantão')
-                .then(confirmado => {
-                    if (confirmado) {
-                        this.iniciarPlantao();
-                    }
-                });
-        }
     }
 }
 
