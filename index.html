@@ -18,17 +18,13 @@
         <header class="header">
             <div class="setor-info">
                 <h1>UTI-01</h1>
-                <div class="info-turno">
-                    <div id="plantao-turno">Plantão A (07:00 - 19:00)</div>
-                    <div id="plantao-periodo">06/06/2025, 16:50:45</div>
-                </div>
+                <div id="plantao-turno">Plantão A (07:00 - 19:00)</div>
                 <div class="status ativo">
                     <span id="status-texto">Plantão Ativo</span>
                     <small id="horario-inicio"></small>
                 </div>
                 <div id="zona-cinza-aviso" class="zona-cinza-aviso"></div>
-            </div> 
-            <button id="btn-encerrar">Encerrar</button>
+            </div>
         </header>
 
         <div class="abas">
@@ -144,26 +140,6 @@
                 </form>
             </div>
         </div>
-
-        <!-- Modal para Encerramento de Plantão -->
-        <div class="modal" id="modal-encerrar">
-            <div class="modal-content">
-                <h2>Encerrar Plantão</h2>
-                <form id="form-encerrar">
-                    <div class="form-group">
-                        <textarea 
-                            id="relatorio-encerramento" 
-                            placeholder="Relatório final do plantão (opcional)."
-                            rows="5"
-                        ></textarea>
-                    </div>
-                    <div class="modal-botoes">
-                        <button type="button" class="btn-cancelar" id="btn-cancelar-encerrar">Cancelar</button>
-                        <button type="submit" class="btn-salvar">Confirmar Encerramento</button>
-                    </div>
-                </form>
-            </div>
-        </div>
         
         <!-- Modal para Nova Pendência -->
         <div class="modal" id="modal-nova-passagem">
@@ -171,7 +147,6 @@
                 <h2>Nova Pendência</h2>
                 <form id="form-nova-passagem">
                     <div class="form-group">
-                        <label for="tipo-passagem">Tipo</label>
                         <select id="tipo-passagem" name="tipo" required>
                             <option value="transferencia">Transferência</option>
                             <option value="checagem-exame" selected>Checagem de exame</option>
@@ -225,7 +200,6 @@
                 <h2>Editar Pendência</h2>
                 <form id="form-editar-passagem">
                     <div class="form-group">
-                        <label for="tipo-editar-passagem">Tipo</label>
                         <select id="tipo-editar-passagem" name="tipo-editar" required>
                             <option value="transferencia">Transferência</option>
                             <option value="checagem-exame">Checagem de exame</option>
