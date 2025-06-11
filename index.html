@@ -3,284 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salvare - Healthcare Shift Transition Platform</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>MVP - Sistema de Passagem de Plantão</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header class="app-header">
-        <div class="logo-container">
-            <h1>Salvare</h1>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <i class="material-icons logo-icon">local_hospital</i>
+            <h1>Sistema de Passagem de Plantão</h1>
+        </div>
+        <div class="header-info">
+            <div class="shift-indicator">
+                <i class="material-icons">schedule</i>
+                <div>
+                    <div>Plantão Ativo</div>
+                    <div class="shift-timer">Noturno (19:00 - 07:00)</div>
+                </div>
+            </div>
+            <div class="profile-info">
+                <div class="profile-avatar">DR</div>
+                <div>
+                    <div>Dr. Roberto Silva</div>
+                    <div>Médico - CTI Norte</div>
+                </div>
+            </div>
         </div>
     </header>
-
+    
+    <!-- Main Container -->
     <div class="container">
-        <header class="header">
-            <div class="setor-info">
-                <h1>UTI-01</h1>
-                <div id="plantao-turno">Plantão A (07:00 - 19:00)</div>
-                <div class="status ativo">
-                    <span id="status-texto">Plantão Ativo</span>
-                    <small id="horario-inicio"></small>
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="nav-items">
+                <div class="nav-item active" data-target="dashboard">
+                    <i class="material-icons">dashboard</i>
+                    <span>Dashboard</span>
                 </div>
-                <div id="zona-cinza-aviso" class="zona-cinza-aviso"></div>
+                <div class="nav-item" data-target="intercorrencias">
+                    <i class="material-icons">local_hospital</i>
+                    <span>Intercorrências</span>
+                </div>
+                <div class="nav-item" data-target="pendencias">
+                    <i class="material-icons">assignment</i>
+                    <span>Pendências</span>
+                </div>
+                <div class="nav-item" data-target="altas">
+                    <i class="material-icons">exit_to_app</i>
+                    <span>Altas</span>
+                </div>
+                <div class="nav-item" data-target="historico">
+                    <i class="material-icons">history</i>
+                    <span>Histórico</span>
+                </div>
+                <div class="nav-item" data-target="medicos">
+                    <i class="material-icons">group</i>
+                    <span>Médicos</span>
+                </div>
+                <div class="nav-item" data-target="indicadores">
+                    <i class="material-icons">assessment</i>
+                    <span>Indicadores</span>
+                </div>
+                <div class="nav-item" data-target="auditoria">
+                    <i class="material-icons">security</i>
+                    <span>Auditoria</span>
+                </div>
+                <div class="nav-item" data-target="configuracoes">
+                    <i class="material-icons">settings</i>
+                    <span>Configurações</span>
+                </div>
+                <div class="nav-item" data-target="logout">
+                    <i class="material-icons">logout</i>
+                    <span>Sair</span>
+                </div>
             </div>
-        </header>
-
-        <div class="abas">
-            <div class="aba ativa" data-aba="intercorrencia" id="aba-intercorrencia">Intercorrência</div>
-            <div class="aba" data-aba="pendencia" id="aba-pendencia">
-                Pendência <span id="contador-passagens" class="contador">0</span>
-            </div>
-            <div class="aba" data-aba="historico" id="aba-historico">Histórico</div>
         </div>
-
-        <div class="conteudo-aba ativa" id="aba-intercorrencia">
-            <div class="barra-pesquisa" id="barra-pesquisa-intercorrencia">
-                <div class="pesquisa-container">
-                    <input type="text" id="input-busca" placeholder="Buscar paciente...">
-                    <span class="icone-busca"></span>
-                    <div class="sugestoes" id="sugestoes-busca"></div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="section-title">
+                <h2>Painel de Plantão - CTI Norte</h2>
+                <div class="current-time">Quinta-feira, 12 de Junho de 2025, 21:45</div>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" data-tab="intercorrencias">Intercorrências</div>
+                <div class="tab" data-tab="pendencias">Pendências</div>
+                <div class="tab" data-tab="altas">Altas</div>
+                <div class="tab" data-tab="historico">Histórico</div>
+            </div>
+            
+            <!-- Indicators -->
+            <div class="indicators-container">
+                <div class="indicator-card">
+                    <div class="indicator-icon">
+                        <i class="material-icons">assignment</i>
+                    </div>
+                    <div class="indicator-content">
+                        <div class="indicator-title">Pendências Ativas</div>
+                        <div class="indicator-value">12</div>
+                    </div>
+                </div>
+                <div class="indicator-card">
+                    <div class="indicator-icon">
+                        <i class="material-icons">local_hospital</i>
+                    </div>
+                    <div class="indicator-content">
+                        <div class="indicator-title">Intercorrências Hoje</div>
+                        <div class="indicator-value">8</div>
+                    </div>
+                </div>
+                <div class="indicator-card">
+                    <div class="indicator-icon">
+                        <i class="material-icons">exit_to_app</i>
+                    </div>
+                    <div class="indicator-content">
+                        <div class="indicator-title">Altas Recentes</div>
+                        <div class="indicator-value">3</div>
+                    </div>
+                </div>
+                <div class="indicator-card">
+                    <div class="indicator-icon">
+                        <i class="material-icons">schedule</i>
+                    </div>
+                    <div class="indicator-content">
+                        <div class="indicator-title">Tempo Médio Resposta</div>
+                        <div class="indicator-value">42 min</div>
+                    </div>
                 </div>
             </div>
             
-            <main class="registros" id="registros"></main>
-        </div>
-
-        <div class="conteudo-aba" id="aba-pendencia">
-            <div class="barra-pesquisa">
-                <div class="pesquisa-container">
-                    <input type="text" id="input-busca-passagens" placeholder="Buscar em pendências...">
-                    <span class="icone-busca"></span>
-                </div>
+            <!-- Intercorrências Cards -->
+            <h3 class="section-title">Pacientes com Intercorrências</h3>
+            <div class="card-container" id="intercorrencias-container">
+                <!-- Cards serão inseridos dinamicamente via JS -->
             </div>
-            <div class="passagens" id="passagens-container"></div>
-        </div>
-
-        <div class="conteudo-aba" id="aba-historico">
-            <div class="barra-pesquisa">
-                <div class="pesquisa-container">
-                    <input type="text" id="input-busca-historico" placeholder="Buscar em histórico...">
-                    <span class="icone-busca"></span>
-                </div>
+            
+            <!-- Pendências Cards -->
+            <h3 class="section-title">Pacientes com Pendências</h3>
+            <div class="card-container" id="pendencias-container">
+                <!-- Cards serão inseridos dinamicamente via JS -->
             </div>
-            <div class="historico-plantao" id="historico-plantao"></div>
-        </div>
-
-        <!-- Botão Flutuante Principal -->
-        <div class="floating-container" id="floating-container">
-            <button class="btn-flutuante-principal" id="btn-flutuante-principal">
-                <span>+</span>
-            </button>
-        </div>
-
-        <!-- Modal para Novo Registro de Intercorrência -->
-        <div class="modal" id="modal">
-            <div class="modal-content">
-                <h2>Nova Intercorrência</h2>
-                <form id="form">
-                    <div class="form-group">
-                        <input 
-                            type="text" 
-                            id="paciente" 
-                            placeholder="Nome do Paciente"
-                            required
-                        >
-                    </div>
-                    <div class="form-group">
-                        <input 
-                            type="text" 
-                            id="leito" 
-                            placeholder="Leito"
-                            required
-                        >
-                    </div>
-                    <div class="form-group">
-                        <input 
-                            type="text" 
-                            id="atendimento" 
-                            placeholder="Atendimento (ID)"
-                            required
-                        >
-                    </div>
-                    <div class="form-group">
-                        <textarea 
-                            id="ocorrencia" 
-                            placeholder="Descreva detalhadamente a intercorrência..."
-                            rows="5"
-                            required
-                        ></textarea>
-                    </div>
-
-                    <div class="modal-botoes">
-                        <button type="button" class="btn-cancelar">Cancelar</button>
-                        <button type="submit" class="btn-salvar">Salvar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Modal para Acréscimo de Informações -->
-        <div class="modal modal-acrescentar" id="modal-acrescentar">
-            <div class="modal-content">
-                <h2>Nova Informação</h2>
-                <form id="form-acrescentar">
-                    <div class="form-group">
-                        <textarea 
-                            id="input-acrescentar" 
-                            placeholder="Descreva a nova ocorrência..." 
-                            rows="4"
-                            required
-                        ></textarea>
-                    </div>
-                    <div class="modal-botoes">
-                        <button type="button" class="btn-cancelar btn-cancelar-acrescentar">Cancelar</button>
-                        <button type="button" class="btn-salvar btn-salvar-acrescentar">Salvar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        
-        <!-- Modal para Nova Pendência -->
-        <div class="modal" id="modal-nova-passagem">
-            <div class="modal-content">
-                <h2>Nova Pendência</h2>
-                <form id="form-nova-passagem">
-                    <div class="form-group">
-                        <select id="tipo-passagem" name="tipo" required>
-                            <option value="transferencia">Transferência</option>
-                            <option value="checagem-exame" selected>Checagem de exame</option>
-                            <option value="reavaliacao">Reavaliação</option>
-                            <option value="outros">Outros</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <input 
-                            type="text" 
-                            id="passagem-paciente" 
-                            placeholder="Nome do Paciente"
-                            required
-                        >
-                    </div>
-                    <div class="form-group">
-                        <input 
-                            type="text" 
-                            id="passagem-leito" 
-                            placeholder="Leito"
-                            required
-                        >
-                    </div>
-                    <div class="form-group">
-                        <input 
-                            type="text" 
-                            id="passagem-atendimento" 
-                            placeholder="Atendimento (ID)"
-                            required
-                        >
-                    </div>
-                    <div class="form-group">
-                        <textarea 
-                            id="input-passagem-texto" 
-                            placeholder="Descreva a nova pendência..." 
-                            rows="4"
-                            required
-                        ></textarea>
-                    </div>
-                    <div class="modal-botoes">
-                        <button type="button" class="btn-cancelar btn-cancelar-nova-passagem">Cancelar</button>
-                        <button type="submit" class="btn-salvar">Salvar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Modal para Editar Pendência -->
-        <div class="modal" id="modal-editar-passagem">
-            <div class="modal-content">
-                <h2>Editar Pendência</h2>
-                <form id="form-editar-passagem">
-                    <div class="form-group">
-                        <select id="tipo-editar-passagem" name="tipo-editar" required>
-                            <option value="transferencia">Transferência</option>
-                            <option value="checagem-exame">Checagem de exame</option>
-                            <option value="reavaliacao">Reavaliação</option>
-                            <option value="outros">Outros</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <input 
-                            type="text" 
-                            id="editar-passagem-paciente" 
-                            placeholder="Nome do Paciente"
-                            required
-                        >
-                    </div>
-                    <div class="form-group">
-                        <input 
-                            type="text" 
-                            id="editar-passagem-leito" 
-                            placeholder="Leito"
-                            required
-                        >
-                    </div>
-                    <div class="form-group">
-                        <input 
-                            type="text" 
-                            id="editar-passagem-atendimento" 
-                            placeholder="Atendimento (ID)"
-                            required
-                        >
-                    </div>
-                    <div class="form-group">
-                        <textarea 
-                            id="input-editar-passagem-texto" 
-                            placeholder="Descreva a pendência..." 
-                            rows="4"
-                            required
-                        ></textarea>
-                    </div>
-                    <div class="modal-botoes">
-                        <button type="button" class="btn-cancelar btn-cancelar-editar-passagem">Cancelar</button>
-                        <button type="submit" class="btn-salvar">Salvar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        
-        <!-- Modal para Editar Ocorrência -->
-        <div class="modal" id="modal-editar-ocorrencia">
-            <div class="modal-content">
-                <h2>Editar Ocorrência</h2>
-                <form id="form-editar-ocorrencia">
-                    <div class="form-group">
-                        <textarea 
-                            id="input-editar-ocorrencia" 
-                            placeholder="Edite a ocorrência..." 
-                            rows="4"
-                            required
-                        ></textarea>
-                    </div>
-                    <div class="modal-botoes">
-                        <button type="button" class="btn-cancelar btn-cancelar-editar-ocorrencia">Cancelar</button>
-                        <button type="submit" class="btn-salvar">Salvar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        
-        <!-- Modal para Confirmações Genéricas -->
-        <div class="modal" id="modal-confirmacao">
-            <div class="modal-content">
-                <h2 id="confirmacao-titulo">Confirmação</h2>
-                <p id="confirmacao-mensagem"></p>
-                <div class="modal-botoes">
-                    <button type="button" class="btn-cancelar" id="btn-cancelar-confirmacao">Cancelar</button>
-                    <button type="button" class="btn-salvar" id="btn-confirmar-ok">Sim</button>
-                </div>
+            
+            <!-- Auditoria -->
+            <h3 class="section-title">Registro de Auditoria (JCI)</h3>
+            <div class="audit-log" id="audit-log-container">
+                <!-- Logs serão inseridos dinamicamente via JS -->
             </div>
         </div>
     </div>
-
+    
+    <!-- Floating Action Button -->
+    <div class="fab">
+        <i class="material-icons">add</i>
+    </div>
+    
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal" id="record-modal">
+            <!-- Conteúdo será inserido dinamicamente via JS -->
+        </div>
+    </div>
+    
+    <!-- Login Modal -->
+    <div class="modal-overlay active" id="login-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Acesso ao Sistema</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">E-mail</label>
+                    <input type="email" class="form-control" id="login-email" placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Senha</label>
+                    <input type="password" class="form-control" id="login-password" placeholder="••••••">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Setor</label>
+                    <select class="form-control" id="login-sector">
+                        <option value="cti-norte">CTI Norte</option>
+                        <option value="cti-sul">CTI Sul</option>
+                        <option value="cti-leste">CTI Leste</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="login-btn">Entrar</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="auth.js"></script>
+    <script src="storage.js"></script>
+    <script src="plantao.js"></script>
+    <script src="registro.js"></script>
+    <script src="admin.js"></script>
+    <script src="audit.js"></script>
+    <script src="ui.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
