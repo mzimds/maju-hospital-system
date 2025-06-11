@@ -1,4 +1,4 @@
-# 🏥 Maju - Sistema de Gestão Hospitalar
+# Maju - SGH
 
 Sistema para gerenciamento de plantões e registros clínicos.
 
