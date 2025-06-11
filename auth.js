@@ -9,11 +9,12 @@ const AuthService = {
         if (session) {
             this.currentUser = session.user;
             this.currentSector = session.sector;
+            // Ativa o plantão atual
+            PlantaoService.activateCurrentShift();
         }
         
         // Configura listeners
         document.getElementById('login-btn').addEventListener('click', this.login.bind(this));
-        document.getElementById('logout-btn')?.addEventListener('click', this.logout.bind(this));
     },
     
     login: function() {
@@ -62,6 +63,9 @@ const AuthService = {
         
         // Fecha modal de login
         document.getElementById('login-modal').classList.remove('active');
+        
+        // Ativa o plantão atual
+        PlantaoService.activateCurrentShift();
         
         // Atualiza UI
         UIService.updateUI();

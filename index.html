@@ -11,6 +11,9 @@
     <!-- Header -->
     <header>
         <div class="logo">
+            <button class="menu-toggle" id="menu-toggle">
+                <i class="material-icons">menu</i>
+            </button>
             <i class="material-icons logo-icon">local_hospital</i>
             <h1>Sistema de Passagem de Plantão</h1>
         </div>
@@ -35,7 +38,7 @@
     <!-- Main Container -->
     <div class="container">
         <!-- Sidebar -->
-        <div class="sidebar">
+        <div class="sidebar" id="sidebar">
             <div class="nav-items">
                 <div class="nav-item active" data-target="dashboard">
                     <i class="material-icons">dashboard</i>
@@ -57,19 +60,19 @@
                     <i class="material-icons">history</i>
                     <span>Histórico</span>
                 </div>
-                <div class="nav-item" data-target="medicos">
+                <div class="nav-item coordinator-only" data-target="medicos">
                     <i class="material-icons">group</i>
                     <span>Médicos</span>
                 </div>
-                <div class="nav-item" data-target="indicadores">
+                <div class="nav-item coordinator-only" data-target="indicadores">
                     <i class="material-icons">assessment</i>
                     <span>Indicadores</span>
                 </div>
-                <div class="nav-item" data-target="auditoria">
+                <div class="nav-item coordinator-only" data-target="auditoria">
                     <i class="material-icons">security</i>
                     <span>Auditoria</span>
                 </div>
-                <div class="nav-item" data-target="configuracoes">
+                <div class="nav-item coordinator-only" data-target="configuracoes">
                     <i class="material-icons">settings</i>
                     <span>Configurações</span>
                 </div>
@@ -83,8 +86,8 @@
         <!-- Main Content -->
         <div class="main-content">
             <div class="section-title">
-                <h2>Painel de Plantão - CTI Norte</h2>
-                <div class="current-time">Quinta-feira, 12 de Junho de 2025, 21:45</div>
+                <h2>Painel de Plantão - <span id="sector-name">CTI Norte</span></h2>
+                <div class="current-time" id="current-time">Quinta-feira, 12 de Junho de 2025, 21:45</div>
             </div>
             
             <!-- Tabs -->
@@ -96,71 +99,45 @@
             </div>
             
             <!-- Indicators -->
-            <div class="indicators-container">
-                <div class="indicator-card">
-                    <div class="indicator-icon">
-                        <i class="material-icons">assignment</i>
-                    </div>
-                    <div class="indicator-content">
-                        <div class="indicator-title">Pendências Ativas</div>
-                        <div class="indicator-value">12</div>
-                    </div>
-                </div>
-                <div class="indicator-card">
-                    <div class="indicator-icon">
-                        <i class="material-icons">local_hospital</i>
-                    </div>
-                    <div class="indicator-content">
-                        <div class="indicator-title">Intercorrências Hoje</div>
-                        <div class="indicator-value">8</div>
-                    </div>
-                </div>
-                <div class="indicator-card">
-                    <div class="indicator-icon">
-                        <i class="material-icons">exit_to_app</i>
-                    </div>
-                    <div class="indicator-content">
-                        <div class="indicator-title">Altas Recentes</div>
-                        <div class="indicator-value">3</div>
-                    </div>
-                </div>
-                <div class="indicator-card">
-                    <div class="indicator-icon">
-                        <i class="material-icons">schedule</i>
-                    </div>
-                    <div class="indicator-content">
-                        <div class="indicator-title">Tempo Médio Resposta</div>
-                        <div class="indicator-value">42 min</div>
-                    </div>
-                </div>
+            <div class="indicators-container" id="indicators-container">
+                <!-- Indicadores serão renderizados aqui -->
             </div>
             
             <!-- Intercorrências Cards -->
-            <h3 class="section-title">Pacientes com Intercorrências</h3>
+            <h3 class="section-title">
+                <h3>Pacientes com Intercorrências <a href="#" class="view-all-link" data-target="intercorrencias">(ver todos)</a></h3>
+            </h3>
             <div class="card-container" id="intercorrencias-container">
                 <!-- Cards serão inseridos dinamicamente via JS -->
             </div>
             
             <!-- Pendências Cards -->
-            <h3 class="section-title">Pacientes com Pendências</h3>
+            <h3 class="section-title">
+                <h3>Pacientes com Pendências <a href="#" class="view-all-link" data-target="pendencias">(ver todos)</a></h3>
+            </h3>
             <div class="card-container" id="pendencias-container">
                 <!-- Cards serão inseridos dinamicamente via JS -->
             </div>
             
             <!-- Auditoria -->
-            <h3 class="section-title">Registro de Auditoria (JCI)</h3>
+            <h3 class="section-title">
+                <h3>Registro de Auditoria (JCI) <a href="#" class="view-all-link" data-target="auditoria">(ver todos)</a></h3>
+            </h3>
             <div class="audit-log" id="audit-log-container">
                 <!-- Logs serão inseridos dinamicamente via JS -->
             </div>
+
+            <!-- Container para Médicos (apenas coordenador) -->
+            <div id="medicos-container" style="display: none;"></div>
         </div>
     </div>
     
     <!-- Floating Action Button -->
-    <div class="fab">
+    <div class="fab" id="fab">
         <i class="material-icons">add</i>
     </div>
     
-    <!-- Modal -->
+    <!-- Modal para Registros -->
     <div class="modal-overlay" id="modal-overlay">
         <div class="modal" id="record-modal">
             <!-- Conteúdo será inserido dinamicamente via JS -->
@@ -196,7 +173,7 @@
             </div>
         </div>
     </div>
-    
+
     <script src="auth.js"></script>
     <script src="storage.js"></script>
     <script src="plantao.js"></script>

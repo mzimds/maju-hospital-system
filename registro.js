@@ -2,7 +2,7 @@
 const RegistroService = {
     init: function() {
         // Configura listeners
-        document.querySelector('.fab').addEventListener('click', this.openCreateModal.bind(this));
+        document.getElementById('fab').addEventListener('click', this.openCreateModal.bind(this));
     },
     
     getRecords: function(type) {

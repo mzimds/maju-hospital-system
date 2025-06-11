@@ -20,6 +20,10 @@ const UIService = {
                 document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
                 
+                // Fecha o menu mobile se estiver aberto
+                document.getElementById('sidebar').classList.remove('active');
+                document.querySelector('.container').classList.remove('active-sidebar');
+                
                 // Atualiza conteúdo conforme o target
                 this.updateContent(target);
             });
@@ -34,19 +38,48 @@ const UIService = {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 
-                // Atualiza conteúdo conforme a tab
+                // Atualiza o conteúdo
                 this.updateContent(tabName);
             });
         });
         
         // Fechar modal
-        document.querySelector('.modal-close')?.addEventListener('click', () => {
-            document.getElementById('modal-overlay').classList.remove('active');
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-close') || e.target.id === 'cancel-record') {
+                document.getElementById('modal-overlay').classList.remove('active');
+            }
         });
         
-        // Cancelar modal
-        document.getElementById('cancel-record')?.addEventListener('click', () => {
-            document.getElementById('modal-overlay').classList.remove('active');
+        // Fechar modal ao clicar no overlay
+        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal-overlay')) {
+                document.getElementById('modal-overlay').classList.remove('active');
+            }
+        });
+        
+        // Menu toggle para mobile
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.querySelector('.container').classList.toggle('active-sidebar');
+        });
+        
+        // Links "Ver todos"
+        document.querySelectorAll('.view-all-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = link.getAttribute('data-target');
+                
+                // Ativa a aba correspondente
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelector(`.tab[data-tab="${target}"]`).classList.add('active');
+                
+                // Ativa o item na sidebar
+                document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+                document.querySelector(`.nav-item[data-target="${target}"]`).classList.add('active');
+                
+                // Atualiza o conteúdo
+                this.updateContent(target);
+            });
         });
     },
     
@@ -60,11 +93,30 @@ const UIService = {
         // Atualiza relógio
         this.updateClock();
         
+        // Controle de acesso por perfil
+        this.updateAccessControl();
+        
         // Atualiza conteúdo com base no item ativo
         const activeNavItem = document.querySelector('.nav-item.active');
         if (activeNavItem) {
             const target = activeNavItem.getAttribute('data-target');
             this.updateContent(target);
+        }
+    },
+    
+    // Atualiza o controle de acesso baseado no perfil
+    updateAccessControl: function() {
+        const isCoordinator = AuthService.isCoordinator();
+        
+        // Mostra/oculta itens apenas para coordenador
+        document.querySelectorAll('.coordinator-only').forEach(el => {
+            el.style.display = isCoordinator ? 'flex' : 'none';
+        });
+        
+        // Atualiza o setor no painel
+        const sectorName = document.getElementById('sector-name');
+        if (sectorName && AuthService.currentSector) {
+            sectorName.textContent = AuthService.currentSector.name;
         }
     },
     
@@ -76,12 +128,9 @@ const UIService = {
             
             if (avatar) {
                 // Iniciais do nome
-                const initials = AuthService.currentUser.name.split(' ')
-                    .map(n => n[0])
-                    .join('')
-                    .substring(0, 2)
-                    .toUpperCase();
-                avatar.textContent = initials;
+                const names = AuthService.currentUser.name.split(' ');
+                const initials = names[0][0] + (names[1] ? names[1][0] : names[0][1] || '');
+                avatar.textContent = initials.toUpperCase();
             }
             
             if (name) name.textContent = AuthService.currentUser.name;
@@ -115,7 +164,7 @@ const UIService = {
             minute: '2-digit'
         };
         
-        const timeElement = document.querySelector('.current-time');
+        const timeElement = document.getElementById('current-time');
         if (timeElement) {
             timeElement.textContent = now.toLocaleDateString('pt-BR', options);
         }
@@ -123,12 +172,16 @@ const UIService = {
     
     updateContent: function(target) {
         // Oculta todos os containers
-        document.querySelectorAll('.card-container, .audit-log').forEach(el => {
+        document.querySelectorAll('.card-container, .audit-log, #medicos-container').forEach(el => {
             el.style.display = 'none';
         });
         
         // Mostra o container relevante
         switch (target) {
+            case 'dashboard':
+                this.renderDashboard();
+                break;
+                
             case 'intercorrencias':
                 this.renderIntercorrencias();
                 document.getElementById('intercorrencias-container').style.display = 'grid';
@@ -152,13 +205,88 @@ const UIService = {
                 document.getElementById('audit-log-container').style.display = 'block';
                 break;
                 
-            case 'dashboard':
-                // Mostra todos os elementos do dashboard
-                document.querySelectorAll('.card-container, .audit-log').forEach(el => {
-                    el.style.display = '';
-                });
+            case 'medicos':
+                // Mostrar container de médicos
+                document.getElementById('medicos-container').style.display = 'block';
                 break;
         }
+    },
+    
+    renderDashboard: function() {
+        // Mostra todos os elementos do dashboard
+        document.querySelectorAll('#intercorrencias-container, #pendencias-container, #audit-log-container').forEach(el => {
+            el.style.display = '';
+        });
+        
+        // Atualiza os indicadores
+        this.renderIndicators();
+        
+        // Atualiza intercorrências e pendências
+        this.renderIntercorrencias();
+        this.renderPendencias();
+        this.renderAuditLog();
+    },
+    
+    renderIndicators: function() {
+        const container = document.getElementById('indicators-container');
+        if (!container) return;
+        
+        const records = StorageService.getData('records') || [];
+        const currentShiftId = PlantaoService.currentShift?.id;
+        
+        if (!currentShiftId) return;
+        
+        // Calcula indicadores
+        const intercorrenciasCount = records.filter(r => 
+            r.type === 'intercorrencia' && r.shiftId === currentShiftId
+        ).length;
+        
+        const pendenciasCount = records.filter(r => 
+            r.type === 'pendencia' && r.shiftId === currentShiftId
+        ).length;
+        
+        const altasCount = records.filter(r => 
+            r.type === 'alta' && r.shiftId === currentShiftId
+        ).length;
+        
+        container.innerHTML = `
+            <div class="indicator-card">
+                <div class="indicator-icon">
+                    <i class="material-icons">assignment</i>
+                </div>
+                <div class="indicator-content">
+                    <div class="indicator-title">Pendências Ativas</div>
+                    <div class="indicator-value">${pendenciasCount}</div>
+                </div>
+            </div>
+            <div class="indicator-card">
+                <div class="indicator-icon">
+                    <i class="material-icons">local_hospital</i>
+                </div>
+                <div class="indicator-content">
+                    <div class="indicator-title">Intercorrências Hoje</div>
+                    <div class="indicator-value">${intercorrenciasCount}</div>
+                </div>
+            </div>
+            <div class="indicator-card">
+                <div class="indicator-icon">
+                    <i class="material-icons">exit_to_app</i>
+                </div>
+                <div class="indicator-content">
+                    <div class="indicator-title">Altas Recentes</div>
+                    <div class="indicator-value">${altasCount}</div>
+                </div>
+            </div>
+            <div class="indicator-card">
+                <div class="indicator-icon">
+                    <i class="material-icons">schedule</i>
+                </div>
+                <div class="indicator-content">
+                    <div class="indicator-title">Tempo Médio Resposta</div>
+                    <div class="indicator-value">42 min</div>
+                </div>
+            </div>
+        `;
     },
     
     renderIntercorrencias: function() {
@@ -219,7 +347,7 @@ const UIService = {
             // Configura listeners dos botões
             card.querySelector('.edit-btn').addEventListener('click', (e) => {
                 const recordId = e.currentTarget.getAttribute('data-id');
-                this.openEditModal(recordId);
+                this.openEditModal(recordId, 'intercorrencia');
             });
             
             card.querySelector('.complement-btn').addEventListener('click', (e) => {
@@ -280,7 +408,7 @@ const UIService = {
                         </div>
                     </div>
                     <div class="action-buttons">
-                        <button class="btn btn-outline resolve-btn" data-id="${record.id}">
+                        <button class="btn btn-success resolve-btn" data-id="${record.id}">
                             <i class="material-icons">check</i> Resolver
                         </button>
                         <button class="btn btn-danger delete-btn" data-id="${record.id}">
@@ -320,7 +448,7 @@ const UIService = {
             return;
         }
         
-        logs.forEach(log => {
+        logs.slice(0, 5).forEach(log => { // Mostrar apenas os 5 mais recentes no dashboard
             const logItem = document.createElement('div');
             logItem.className = 'log-item';
             logItem.innerHTML = `
