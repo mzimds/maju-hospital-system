@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MVP - Sistema de Passagem de Plantão</title>
+    <title>Salvare - Sistema de Passagem de Plantão</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,7 +16,7 @@
                 <i class="material-icons">menu</i>
             </button>
             <i class="material-icons logo-icon">local_hospital</i>
-            <h1>Sistema de Passagem de Plantão</h1>
+            <h1>Salvare</h1>
         </div>
         <div class="header-info">
             <div class="shift-indicator">
@@ -44,21 +45,13 @@
                     <i class="material-icons">dashboard</i>
                     <span>Dashboard</span>
                 </div>
-                <div class="nav-item" data-target="intercorrencias">
-                    <i class="material-icons">local_hospital</i>
-                    <span>Intercorrências</span>
+                <div class="nav-item coordinator-only" data-target="configuracoes-iniciais">
+                    <i class="material-icons">settings</i>
+                    <span>Configurações</span>
                 </div>
-                <div class="nav-item" data-target="pendencias">
-                    <i class="material-icons">assignment</i>
-                    <span>Pendências</span>
-                </div>
-                <div class="nav-item" data-target="altas">
-                    <i class="material-icons">exit_to_app</i>
-                    <span>Altas</span>
-                </div>
-                <div class="nav-item" data-target="historico">
-                    <i class="material-icons">history</i>
-                    <span>Histórico</span>
+                <div class="nav-item coordinator-only" data-target="gerenciar-setores">
+                    <i class="material-icons">business</i>
+                    <span>Setores</span>
                 </div>
                 <div class="nav-item coordinator-only" data-target="medicos">
                     <i class="material-icons">group</i>
@@ -71,10 +64,6 @@
                 <div class="nav-item coordinator-only" data-target="auditoria">
                     <i class="material-icons">security</i>
                     <span>Auditoria</span>
-                </div>
-                <div class="nav-item coordinator-only" data-target="configuracoes">
-                    <i class="material-icons">settings</i>
-                    <span>Configurações</span>
                 </div>
                 <div class="nav-item" data-target="logout">
                     <i class="material-icons">logout</i>
@@ -98,43 +87,11 @@
                 <div class="tab" data-tab="historico">Histórico</div>
             </div>
             
-            <!-- Indicators -->
-            <div class="indicators-container" id="indicators-container">
-                <!-- Indicadores serão renderizados aqui -->
+            <!-- Content Area -->
+            <div id="content-area">
+                <!-- Conteúdo dinâmico será inserido aqui -->
             </div>
-            
-            <!-- Intercorrências Cards -->
-            <h3 class="section-title">
-                <h3>Pacientes com Intercorrências <a href="#" class="view-all-link" data-target="intercorrencias">(ver todos)</a></h3>
-            </h3>
-            <div class="card-container" id="intercorrencias-container">
-                <!-- Cards serão inseridos dinamicamente via JS -->
-            </div>
-            
-            <!-- Pendências Cards -->
-            <h3 class="section-title">
-                <h3>Pacientes com Pendências <a href="#" class="view-all-link" data-target="pendencias">(ver todos)</a></h3>
-            </h3>
-            <div class="card-container" id="pendencias-container">
-                <!-- Cards serão inseridos dinamicamente via JS -->
-            </div>
-            
-            <!-- Auditoria -->
-            <h3 class="section-title">
-                <h3>Registro de Auditoria (JCI) <a href="#" class="view-all-link" data-target="auditoria">(ver todos)</a></h3>
-            </h3>
-            <div class="audit-log" id="audit-log-container">
-                <!-- Logs serão inseridos dinamicamente via JS -->
-            </div>
-
-            <!-- Container para Médicos (apenas coordenador) -->
-            <div id="medicos-container" style="display: none;"></div>
         </div>
-    </div>
-    
-    <!-- Floating Action Button -->
-    <div class="fab" id="fab">
-        <i class="material-icons">add</i>
     </div>
     
     <!-- Modal para Registros -->
@@ -174,8 +131,14 @@
         </div>
     </div>
 
-    <script src="auth.js"></script>
+    <!-- Floating Action Button -->
+    <button class="fab" id="fab-add">
+        <i class="material-icons">add</i>
+    </button>
+
+    <!-- Scripts -->
     <script src="storage.js"></script>
+    <script src="auth.js"></script>
     <script src="plantao.js"></script>
     <script src="registro.js"></script>
     <script src="admin.js"></script>

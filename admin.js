@@ -1,15 +1,12 @@
 // Serviço de painel administrativo
 const AdminService = {
     init: function() {
-        // Configura listeners específicos para coordenadores
         if (AuthService.isCoordinator()) {
-            // Adiciona funcionalidades administrativas
             this.setupCoordinatorFeatures();
         }
     },
     
     setupCoordinatorFeatures: function() {
-        // Quando o item de médicos é clicado
         document.querySelector('.nav-item[data-target="medicos"]')?.addEventListener('click', () => {
             this.renderPendingDoctors();
         });
@@ -32,12 +29,7 @@ const AdminService = {
         users[userIndex].approved = true;
         StorageService.saveData('users', users);
         
-        // Registra ação na auditoria
-        AuditService.logAction('Aprovou médico', `ID: ${doctorId}`);
-        
-        // Atualiza UI
         UIService.updateUI();
-        
         UIService.showAlert('Médico aprovado com sucesso!', 'success');
         
         return users[userIndex];
@@ -52,30 +44,33 @@ const AdminService = {
         users.splice(userIndex, 1);
         StorageService.saveData('users', users);
         
-        // Atualiza UI
         UIService.updateUI();
-        
         UIService.showAlert('Médico rejeitado com sucesso!', 'success');
     },
     
-    // Renderiza lista de médicos pendentes de aprovação
     renderPendingDoctors: function() {
+        const contentArea = document.getElementById('content-area');
+        if (!contentArea) return;
+        
+        contentArea.innerHTML = `
+            <div class="card-container" id="medicos-container"></div>
+        `;
+        
         const container = document.getElementById('medicos-container');
         if (!container) return;
         
         container.innerHTML = '';
-        container.style.display = 'block';
         
         const pendingDoctors = this.getPendingDoctors();
         
         if (pendingDoctors.length === 0) {
-            container.innerHTML = '<p>Todos os médicos estão aprovados.</p>';
+            container.innerHTML = '<div class="no-records"><p>Todos os médicos estão aprovados.</p></div>';
             return;
         }
         
         pendingDoctors.forEach(doctor => {
             const card = document.createElement('div');
-            card.className = 'card';
+            card.className = 'card fade-in';
             card.innerHTML = `
                 <div class="card-header">
                     <div class="patient-name">${doctor.name}</div>
@@ -99,7 +94,6 @@ const AdminService = {
             
             container.appendChild(card);
             
-            // Configura listeners
             card.querySelector('.approve-btn').addEventListener('click', (e) => {
                 const doctorId = e.currentTarget.getAttribute('data-id');
                 this.approveDoctor(doctorId);

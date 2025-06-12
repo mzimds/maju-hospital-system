@@ -1,8 +1,31 @@
 // Serviço de manipulação de UI
 const UIService = {
+    expandedSections: {},
+    
     init: function() {
-        // Configura listeners gerais
         this.setupEventListeners();
+        document.getElementById('fab-add').addEventListener('click', this.handleFabClick.bind(this));
+    },
+    
+    handleFabClick: function() {
+        const activeTab = document.querySelector('.tab.active');
+        if (!activeTab) return;
+        
+        const tabType = activeTab.getAttribute('data-tab');
+        
+        switch(tabType) {
+            case 'intercorrencias':
+                this.renderRecordModal('intercorrencia');
+                break;
+            case 'pendencias':
+                this.renderRecordModal('pendencia');
+                break;
+            case 'altas':
+                this.renderRecordModal('alta');
+                break;
+            default:
+                this.renderRecordModal('intercorrencia');
+        }
     },
     
     setupEventListeners: function() {
@@ -16,15 +39,12 @@ const UIService = {
                     return;
                 }
                 
-                // Atualiza item ativo
                 document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
                 
-                // Fecha o menu mobile se estiver aberto
                 document.getElementById('sidebar').classList.remove('active');
                 document.querySelector('.container').classList.remove('active-sidebar');
                 
-                // Atualiza conteúdo conforme o target
                 this.updateContent(target);
             });
         });
@@ -34,11 +54,9 @@ const UIService = {
             tab.addEventListener('click', () => {
                 const tabName = tab.getAttribute('data-tab');
                 
-                // Atualiza tab ativa
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 
-                // Atualiza o conteúdo
                 this.updateContent(tabName);
             });
         });
@@ -60,60 +78,31 @@ const UIService = {
         // Menu toggle para mobile
         document.getElementById('menu-toggle').addEventListener('click', () => {
             document.getElementById('sidebar').classList.toggle('active');
-            document.querySelector('.container').classList.toggle('active-sidebar');
-        });
-        
-        // Links "Ver todos"
-        document.querySelectorAll('.view-all-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const target = link.getAttribute('data-target');
-                
-                // Ativa a aba correspondente
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelector(`.tab[data-tab="${target}"]`).classList.add('active');
-                
-                // Ativa o item na sidebar
-                document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-                document.querySelector(`.nav-item[data-target="${target}"]`).classList.add('active');
-                
-                // Atualiza o conteúdo
-                this.updateContent(target);
-            });
         });
     },
     
     updateUI: function() {
-        // Atualiza informações do usuário
         this.updateUserInfo();
-        
-        // Atualiza informações do plantão
         this.updateShiftInfo();
-        
-        // Atualiza relógio
         this.updateClock();
-        
-        // Controle de acesso por perfil
         this.updateAccessControl();
         
-        // Atualiza conteúdo com base no item ativo
         const activeNavItem = document.querySelector('.nav-item.active');
         if (activeNavItem) {
             const target = activeNavItem.getAttribute('data-target');
             this.updateContent(target);
+        } else {
+            this.updateContent('dashboard');
         }
     },
     
-    // Atualiza o controle de acesso baseado no perfil
     updateAccessControl: function() {
         const isCoordinator = AuthService.isCoordinator();
         
-        // Mostra/oculta itens apenas para coordenador
         document.querySelectorAll('.coordinator-only').forEach(el => {
             el.style.display = isCoordinator ? 'flex' : 'none';
         });
         
-        // Atualiza o setor no painel
         const sectorName = document.getElementById('sector-name');
         if (sectorName && AuthService.currentSector) {
             sectorName.textContent = AuthService.currentSector.name;
@@ -127,7 +116,6 @@ const UIService = {
             const role = document.querySelector('.profile-info > div > div:last-child');
             
             if (avatar) {
-                // Iniciais do nome
                 const names = AuthService.currentUser.name.split(' ');
                 const initials = names[0][0] + (names[1] ? names[1][0] : names[0][1] || '');
                 avatar.textContent = initials.toUpperCase();
@@ -171,59 +159,84 @@ const UIService = {
     },
     
     updateContent: function(target) {
-        // Oculta todos os containers
-        document.querySelectorAll('.card-container, .audit-log, #medicos-container').forEach(el => {
-            el.style.display = 'none';
-        });
+        const contentArea = document.getElementById('content-area');
+        if (!contentArea) return;
         
-        // Mostra o container relevante
+        contentArea.innerHTML = '';
+        
         switch (target) {
             case 'dashboard':
                 this.renderDashboard();
                 break;
-                
             case 'intercorrencias':
                 this.renderIntercorrencias();
-                document.getElementById('intercorrencias-container').style.display = 'grid';
                 break;
-                
             case 'pendencias':
                 this.renderPendencias();
-                document.getElementById('pendencias-container').style.display = 'grid';
                 break;
-                
             case 'altas':
                 this.renderAltas();
                 break;
-                
             case 'historico':
                 this.renderHistorico();
                 break;
-                
             case 'auditoria':
                 this.renderAuditLog();
-                document.getElementById('audit-log-container').style.display = 'block';
                 break;
-                
             case 'medicos':
-                // Mostrar container de médicos
-                document.getElementById('medicos-container').style.display = 'block';
+                AdminService.renderPendingDoctors();
+                break;
+            case 'configuracoes-iniciais':
+                this.renderInitialConfig();
                 break;
         }
     },
     
     renderDashboard: function() {
-        // Mostra todos os elementos do dashboard
-        document.querySelectorAll('#intercorrencias-container, #pendencias-container, #audit-log-container').forEach(el => {
-            el.style.display = '';
+        const contentArea = document.getElementById('content-area');
+        if (!contentArea) return;
+        
+        contentArea.innerHTML = `
+            <div class="indicators-container" id="indicators-container"></div>
+            
+            <div class="section-title">
+                <h3>Pacientes com Intercorrências</h3>
+                <a href="#" class="view-all-link" data-target="intercorrencias">Ver todos</a>
+            </div>
+            <div class="card-container" id="intercorrencias-container"></div>
+            
+            <div class="section-title">
+                <h3>Pacientes com Pendências</h3>
+                <a href="#" class="view-all-link" data-target="pendencias">Ver todos</a>
+            </div>
+            <div class="card-container" id="pendencias-container"></div>
+            
+            <div class="section-title">
+                <h3>Pacientes com Alta</h3>
+                <a href="#" class="view-all-link" data-target="altas">Ver todos</a>
+            </div>
+            <div class="card-container" id="altas-container"></div>
+            
+            <div class="section-title">
+                <h3>Registro de Auditoria</h3>
+                <a href="#" class="view-all-link" data-target="auditoria">Ver todos</a>
+            </div>
+            <div class="audit-log" id="audit-log-container"></div>
+        `;
+        
+        document.querySelectorAll('.view-all-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = link.getAttribute('data-target');
+                document.querySelector(`.tab[data-tab="${target}"]`).classList.add('active');
+                this.updateContent(target);
+            });
         });
         
-        // Atualiza os indicadores
         this.renderIndicators();
-        
-        // Atualiza intercorrências e pendências
         this.renderIntercorrencias();
         this.renderPendencias();
+        this.renderAltas();
         this.renderAuditLog();
     },
     
@@ -236,21 +249,24 @@ const UIService = {
         
         if (!currentShiftId) return;
         
-        // Calcula indicadores
         const intercorrenciasCount = records.filter(r => 
-            r.type === 'intercorrencia' && r.shiftId === currentShiftId
+            r.type === 'intercorrencia' && 
+            r.shiftId === currentShiftId
         ).length;
         
         const pendenciasCount = records.filter(r => 
-            r.type === 'pendencia' && r.shiftId === currentShiftId
+            r.type === 'pendencia' && 
+            r.shiftId === currentShiftId &&
+            !r.resolved
         ).length;
         
         const altasCount = records.filter(r => 
-            r.type === 'alta' && r.shiftId === currentShiftId
+            r.type === 'alta' && 
+            r.shiftId === currentShiftId
         ).length;
         
         container.innerHTML = `
-            <div class="indicator-card">
+            <div class="indicator-card slide-in">
                 <div class="indicator-icon">
                     <i class="material-icons">assignment</i>
                 </div>
@@ -259,16 +275,16 @@ const UIService = {
                     <div class="indicator-value">${pendenciasCount}</div>
                 </div>
             </div>
-            <div class="indicator-card">
+            <div class="indicator-card slide-in">
                 <div class="indicator-icon">
                     <i class="material-icons">local_hospital</i>
                 </div>
                 <div class="indicator-content">
-                    <div class="indicator-title">Intercorrências Hoje</div>
+                    <div class="indicator-title">Intercorrências</div>
                     <div class="indicator-value">${intercorrenciasCount}</div>
                 </div>
             </div>
-            <div class="indicator-card">
+            <div class="indicator-card slide-in">
                 <div class="indicator-icon">
                     <i class="material-icons">exit_to_app</i>
                 </div>
@@ -277,12 +293,12 @@ const UIService = {
                     <div class="indicator-value">${altasCount}</div>
                 </div>
             </div>
-            <div class="indicator-card">
+            <div class="indicator-card slide-in">
                 <div class="indicator-icon">
                     <i class="material-icons">schedule</i>
                 </div>
                 <div class="indicator-content">
-                    <div class="indicator-title">Tempo Médio Resposta</div>
+                    <div class="indicator-title">Tempo Médio</div>
                     <div class="indicator-value">42 min</div>
                 </div>
             </div>
@@ -308,7 +324,7 @@ const UIService = {
             `;
             
             document.getElementById('create-intercorrencia')?.addEventListener('click', () => {
-                UIService.renderRecordModal('intercorrencia');
+                this.renderRecordModal('intercorrencia');
             });
             
             return;
@@ -316,7 +332,7 @@ const UIService = {
         
         records.forEach(record => {
             const card = document.createElement('div');
-            card.className = 'card';
+            card.className = 'card fade-in';
             card.innerHTML = `
                 <div class="card-header">
                     <div class="patient-name">${record.patientName}</div>
@@ -344,7 +360,6 @@ const UIService = {
             
             container.appendChild(card);
             
-            // Configura listeners dos botões
             card.querySelector('.edit-btn').addEventListener('click', (e) => {
                 const recordId = e.currentTarget.getAttribute('data-id');
                 this.openEditModal(recordId, 'intercorrencia');
@@ -376,7 +391,7 @@ const UIService = {
             `;
             
             document.getElementById('create-pendencia')?.addEventListener('click', () => {
-                UIService.renderRecordModal('pendencia');
+                this.renderRecordModal('pendencia');
             });
             
             return;
@@ -387,7 +402,7 @@ const UIService = {
             const pendencyCount = pendencies.filter(p => p.trim()).length;
             
             const card = document.createElement('div');
-            card.className = 'card';
+            card.className = 'card fade-in';
             card.innerHTML = `
                 <div class="card-header">
                     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
@@ -420,14 +435,82 @@ const UIService = {
             
             container.appendChild(card);
             
-            // Configura listeners dos botões
             card.querySelector('.resolve-btn').addEventListener('click', (e) => {
                 const recordId = e.currentTarget.getAttribute('data-id');
-                RegistroService.deleteRecord(recordId);
+                RegistroService.resolvePendency(recordId);
             });
             
             card.querySelector('.delete-btn').addEventListener('click', (e) => {
                 if (confirm('Tem certeza que deseja excluir esta pendência?')) {
+                    const recordId = e.currentTarget.getAttribute('data-id');
+                    RegistroService.deleteRecord(recordId);
+                }
+            });
+        });
+    },
+    
+    renderAltas: function() {
+        const container = document.getElementById('altas-container');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        const records = RegistroService.getRecords('alta');
+        
+        if (records.length === 0) {
+            container.innerHTML = `
+                <div class="no-records">
+                    <p>Nenhuma alta registrada neste plantão.</p>
+                    <button class="btn btn-primary" id="create-alta">
+                        <i class="material-icons">add</i> Registrar Alta
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('create-alta')?.addEventListener('click', () => {
+                this.renderRecordModal('alta');
+            });
+            
+            return;
+        }
+        
+        records.forEach(record => {
+            const card = document.createElement('div');
+            card.className = 'card fade-in';
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="patient-name">${record.patientName}</div>
+                    <div class="patient-info">Leito ${record.bed} | Atend: ${record.attendanceNumber}</div>
+                </div>
+                <div class="card-body">
+                    <div class="card-item">
+                        <div class="item-title">Descrição</div>
+                        <div class="item-content">${record.description}</div>
+                    </div>
+                    <div class="card-item">
+                        <div class="item-title">Registrado por</div>
+                        <div class="item-content">${this.getUserName(record.doctorId)} (${this.formatDateTime(record.createdAt)})</div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-outline edit-btn" data-id="${record.id}">
+                            <i class="material-icons">edit</i> Editar
+                        </button>
+                        <button class="btn btn-danger delete-btn" data-id="${record.id}">
+                            <i class="material-icons">delete</i> Excluir
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(card);
+            
+            card.querySelector('.edit-btn').addEventListener('click', (e) => {
+                const recordId = e.currentTarget.getAttribute('data-id');
+                this.openEditModal(recordId, 'alta');
+            });
+            
+            card.querySelector('.delete-btn').addEventListener('click', (e) => {
+                if (confirm('Tem certeza que deseja excluir este registro de alta?')) {
                     const recordId = e.currentTarget.getAttribute('data-id');
                     RegistroService.deleteRecord(recordId);
                 }
@@ -444,13 +527,13 @@ const UIService = {
         const logs = AuditService.getLogs();
         
         if (logs.length === 0) {
-            container.innerHTML = '<p>Nenhum registro de auditoria encontrado.</p>';
+            container.innerHTML = '<div class="no-records"><p>Nenhum registro de auditoria encontrado.</p></div>';
             return;
         }
         
-        logs.slice(0, 5).forEach(log => { // Mostrar apenas os 5 mais recentes no dashboard
+        logs.forEach(log => {
             const logItem = document.createElement('div');
-            logItem.className = 'log-item';
+            logItem.className = 'log-item fade-in';
             logItem.innerHTML = `
                 <div class="log-icon">
                     <i class="material-icons">history</i>
@@ -483,7 +566,7 @@ const UIService = {
                 title = 'Nova Intercorrência';
                 fields = `
                     <div class="form-group">
-                        <label class="form-label">Classificação (JCI)</label>
+                        <label class="form-label">Classificação</label>
                         <select class="form-control" id="classification">
                             <option>Evento Adverso</option>
                             <option>Incidente sem dano</option>
@@ -493,7 +576,6 @@ const UIService = {
                     </div>
                 `;
                 break;
-                
             case 'pendencia':
                 title = 'Nova Pendência';
                 fields = `
@@ -509,12 +591,10 @@ const UIService = {
                     </div>
                 `;
                 break;
-                
             case 'alta':
                 title = 'Registrar Alta';
                 fields = '';
                 break;
-                
             default:
                 title = 'Novo Registro';
                 fields = '';
@@ -532,7 +612,7 @@ const UIService = {
                         <input type="text" class="form-control" id="patient-name" placeholder="Digite o nome do paciente" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Número de Atendimento</label>
+                        <label class="form-label">Nº de Atendimento</label>
                         <input type="text" class="form-control" id="attendance-number" placeholder="Nº de atendimento">
                     </div>
                 </div>
@@ -563,7 +643,6 @@ const UIService = {
         
         modalOverlay.classList.add('active');
         
-        // Configura listener do botão Salvar
         document.getElementById('save-record').addEventListener('click', () => {
             const patientName = document.getElementById('patient-name').value;
             const attendanceNumber = document.getElementById('attendance-number').value;
@@ -571,7 +650,7 @@ const UIService = {
             const description = document.getElementById('description').value;
             
             if (!patientName || !bed || !description) {
-                this.showAlert('Preencha os campos obrigatórios: Paciente, Leito e Descrição', 'warning');
+                this.showAlert('Preencha os campos obrigatórios', 'warning');
                 return;
             }
             
@@ -605,45 +684,31 @@ const UIService = {
     },
     
     showAlert: function(message, type = 'info') {
-        // Remove alertas existentes
         const existingAlert = document.querySelector('.alert');
         if (existingAlert) existingAlert.remove();
         
-        // Cria novo alerta
+        const icons = {
+            'success': 'check_circle',
+            'warning': 'warning',
+            'error': 'error',
+            'info': 'info'
+        };
+        
         const alert = document.createElement('div');
         alert.className = `alert alert-${type}`;
-        alert.textContent = message;
-        
-        // Posiciona no topo
-        alert.style.position = 'fixed';
-        alert.style.top = '20px';
-        alert.style.right = '20px';
-        alert.style.padding = '15px 20px';
-        alert.style.borderRadius = '4px';
-        alert.style.zIndex = '3000';
-        alert.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-        alert.style.color = 'white';
-        
-        // Cores por tipo
-        switch (type) {
-            case 'success':
-                alert.style.backgroundColor = 'var(--success)';
-                break;
-            case 'warning':
-                alert.style.backgroundColor = 'var(--warning)';
-                break;
-            case 'error':
-                alert.style.backgroundColor = 'var(--danger)';
-                break;
-            default:
-                alert.style.backgroundColor = 'var(--secondary)';
-        }
+        alert.innerHTML = `
+            <i class="material-icons">${icons[type]}</i>
+            <span>${message}</span>
+        `;
         
         document.body.appendChild(alert);
         
-        // Remove após 3 segundos
+        setTimeout(() => {
+            alert.classList.add('show');
+        }, 10);
+        
         setTimeout(() => {
             alert.remove();
-        }, 3000);
+        }, 4000);
     }
 };

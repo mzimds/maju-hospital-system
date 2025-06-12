@@ -1,8 +1,6 @@
 // Serviço de registro de auditoria
 const AuditService = {
-    init: function() {
-        // Inicialização se necessário
-    },
+    init: function() {},
     
     logAction: function(action, details) {
         if (!AuthService.currentUser) return;
@@ -16,10 +14,9 @@ const AuditService = {
         };
         
         const logs = StorageService.getData('auditLog') || [];
-        logs.unshift(newLog); // Adiciona no início
+        logs.unshift(newLog);
         StorageService.saveData('auditLog', logs);
         
-        // Atualiza UI se estiver na aba de auditoria
         if (document.querySelector('.nav-item[data-target="auditoria"]')?.classList.contains('active')) {
             UIService.renderAuditLog();
         }
@@ -31,7 +28,6 @@ const AuditService = {
         const logs = StorageService.getData('auditLog') || [];
         const users = StorageService.getData('users') || [];
         
-        // Enriquece os logs com informações do usuário
         return logs.map(log => {
             const user = users.find(u => u.id === log.userId);
             return {

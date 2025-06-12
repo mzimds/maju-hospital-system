@@ -1,17 +1,15 @@
 // Serviço de CRUD de registros
 const RegistroService = {
-    init: function() {
-        // Configura listeners
-        document.getElementById('fab').addEventListener('click', this.openCreateModal.bind(this));
-    },
+    init: function() {},
     
-    getRecords: function(type) {
+    getRecords: function(type, resolved = false) {
         if (!PlantaoService.currentShift) return [];
         
         const records = StorageService.getData('records') || [];
         return records.filter(r => 
             r.type === type && 
-            r.shiftId === PlantaoService.currentShift.id
+            r.shiftId === PlantaoService.currentShift.id &&
+            (resolved ? r.resolved : !r.resolved)
         );
     },
     
@@ -24,6 +22,7 @@ const RegistroService = {
         const newRecord = {
             id: `rec-${Date.now()}`,
             ...recordData,
+            resolved: false,
             shiftId: PlantaoService.currentShift.id,
             doctorId: AuthService.currentUser.id,
             createdAt: new Date().toISOString(),
@@ -34,12 +33,7 @@ const RegistroService = {
         records.push(newRecord);
         StorageService.saveData('records', records);
         
-        // Registra ação na auditoria
-        AuditService.logAction(`Registrou ${recordData.type}`, `Paciente: ${recordData.patientName}`);
-        
-        // Atualiza UI
         UIService.updateUI();
-        
         UIService.showAlert('Registro criado com sucesso!', 'success');
         
         return newRecord;
@@ -63,12 +57,7 @@ const RegistroService = {
         records[recordIndex] = updatedRecord;
         StorageService.saveData('records', records);
         
-        // Registra ação na auditoria
-        AuditService.logAction(`Atualizou ${updatedRecord.type}`, `ID: ${recordId}`);
-        
-        // Atualiza UI
         UIService.updateUI();
-        
         UIService.showAlert('Registro atualizado com sucesso!', 'success');
         
         return updatedRecord;
@@ -86,23 +75,30 @@ const RegistroService = {
         const [deletedRecord] = records.splice(recordIndex, 1);
         StorageService.saveData('records', records);
         
-        // Registra ação na auditoria
-        AuditService.logAction(`Excluiu ${deletedRecord.type}`, `ID: ${recordId}`);
-        
-        // Atualiza UI
         UIService.updateUI();
-        
         UIService.showAlert('Registro excluído com sucesso!', 'success');
         
         return deletedRecord;
     },
     
-    openCreateModal: function() {
-        // Determina o tipo de registro com base na aba ativa
-        const activeTab = document.querySelector('.tab.active');
-        if (!activeTab) return;
+    resolvePendency: function(recordId) {
+        const records = StorageService.getData('records') || [];
+        const recordIndex = records.findIndex(r => r.id === recordId);
         
-        const recordType = activeTab.getAttribute('data-tab');
-        UIService.renderRecordModal(recordType);
+        if (recordIndex === -1) {
+            UIService.showAlert('Pendência não encontrada', 'error');
+            return;
+        }
+        
+        const record = records[recordIndex];
+        record.resolved = true;
+        record.updatedAt = new Date().toISOString();
+        
+        StorageService.saveData('records', records);
+        
+        UIService.updateUI();
+        UIService.showAlert('Pendência resolvida com sucesso!', 'success');
+        
+        return record;
     }
 };

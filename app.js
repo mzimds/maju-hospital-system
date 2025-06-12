@@ -72,7 +72,45 @@ function loadSampleData() {
                 { id: 'cti-leste', name: 'CTI Leste', grayZone: 10 }
             ],
             shifts: [],
-            records: [],
+            records: [
+                {
+                    id: 'rec-1',
+                    type: 'intercorrencia',
+                    patientName: 'João da Silva',
+                    attendanceNumber: 'ATD-2023-001',
+                    bed: '102A',
+                    description: 'Paciente apresentou febre alta de 39°C às 15h. Administrado dipirona 1g IV.',
+                    shiftId: '',
+                    doctorId: '2',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                },
+                {
+                    id: 'rec-2',
+                    type: 'pendencia',
+                    patientName: 'Maria Oliveira',
+                    attendanceNumber: 'ATD-2023-002',
+                    bed: '205B',
+                    description: 'Realizar exame de sangue\nAtualizar prontuário\nEntrar em contato com família',
+                    shiftId: '',
+                    doctorId: '3',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    resolved: false
+                },
+                {
+                    id: 'rec-3',
+                    type: 'alta',
+                    patientName: 'Carlos Santos',
+                    attendanceNumber: 'ATD-2023-003',
+                    bed: '301C',
+                    description: 'Paciente com condições clínicas estáveis para alta médica. Orientado retorno em 7 dias.',
+                    shiftId: '',
+                    doctorId: '2',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                }
+            ],
             auditLog: []
         };
         

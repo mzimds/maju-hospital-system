@@ -1,9 +1,8 @@
 // Serviço de armazenamento (LocalStorage)
 const StorageService = {
     init: function() {
-        // Verifica se o navegador suporta localStorage
         if (typeof(Storage) === "undefined") {
-            console.error('LocalStorage não é suportado neste navegador');
+            console.error('LocalStorage não suportado');
             return;
         }
     },
@@ -19,9 +18,5 @@ const StorageService = {
     
     removeData: function(key) {
         localStorage.removeItem(key);
-    },
-    
-    clearAll: function() {
-        localStorage.clear();
     }
 };
